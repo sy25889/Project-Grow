@@ -7,6 +7,7 @@ type Props = {
   barrierRatio: number;
   bossHealthRatio: number;
   groggyRemaining: number;
+  lightBarrierRemaining: number;
 };
 
 type Effect = {
@@ -91,7 +92,11 @@ function createHero(index: number): HeroRig {
     shield.position.set(0.76, 1.06, 0.08);
     shield.rotation.z = -0.12;
     body.add(shield);
-    weapon.add(new THREE.Object3D());
+    const holyGrip = addMesh(weapon, new THREE.CylinderGeometry(0.05, 0.05, 0.64, 8), material(0x6f5633, 0.34), [-0.42, 0.78, -0.08]);
+    holyGrip.rotation.z = 0.48;
+    const holyBlade = addMesh(weapon, new THREE.ConeGeometry(0.15, 1.02, 4), material(0xf6edcf, 0.2), [-0.68, 1.27, -0.08]);
+    holyBlade.rotation.z = 0.48;
+    addMesh(weapon, new THREE.BoxGeometry(0.48, 0.08, 0.1), material(0xe7c968, 0.28), [-0.5, 0.91, -0.08]);
     root.userData.shield = shield;
   } else if (index === 1) {
     const grip = addMesh(weapon, new THREE.CylinderGeometry(0.055, 0.055, 0.72, 8), material(0x50392b), [0.24, 0.55, 0]);
@@ -126,10 +131,10 @@ function createHero(index: number): HeroRig {
   return { root, weapon, orb: root.userData.orb as THREE.Mesh | undefined, shield: root.userData.shield as THREE.Group | undefined, base: HERO_POSITIONS[index].clone() };
 }
 
-export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining }: Props) {
+export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, lightBarrierRemaining }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
-  const stateRef = useRef({ barrierRatio, bossHealthRatio, groggyRemaining });
-  stateRef.current = { barrierRatio, bossHealthRatio, groggyRemaining };
+  const stateRef = useRef({ barrierRatio, bossHealthRatio, groggyRemaining, lightBarrierRemaining });
+  stateRef.current = { barrierRatio, bossHealthRatio, groggyRemaining, lightBarrierRemaining };
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -230,6 +235,22 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining }: 
 
     const heroes = HERO_COLORS.map((_, index) => createHero(index));
     heroes.forEach((hero) => scene.add(hero.root));
+    const lightBarrierAuras = heroes.map((hero, index) => {
+      const aura = new THREE.Group();
+      const color = index === 0 ? 0xffda82 : 0x8edcf0;
+      const ringMaterial = transparentMaterial(color, 0.46);
+      const domeMaterial = transparentMaterial(color, 0.1);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.035, 8, 28), ringMaterial);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.y = 0.28;
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(0.78, 18, 12), domeMaterial);
+      dome.position.y = 1.08;
+      dome.scale.set(0.88, 1.42, 0.88);
+      aura.add(ring, dome);
+      aura.visible = false;
+      hero.root.add(aura);
+      return { aura, ring, dome, ringMaterial, domeMaterial };
+    });
 
     const golem = new THREE.Group();
     const golemModel = new THREE.Group();
@@ -321,6 +342,17 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining }: 
       }
       if (previousBarrier > 0.02 && live.barrierRatio <= 0.02) { spawnDebris(); shake = 0.7; }
       previousBarrier = live.barrierRatio;
+      const lightBarrierActive = live.lightBarrierRemaining > 0;
+      lightBarrierAuras.forEach(({ aura, ring, dome, ringMaterial, domeMaterial }, index) => {
+        aura.visible = lightBarrierActive;
+        if (!lightBarrierActive) return;
+        const pulse = 1 + Math.sin(frame * 5 + index) * 0.08;
+        ring.scale.setScalar(pulse);
+        ring.rotation.z += delta * (1.8 + index * 0.12);
+        dome.scale.set(0.88 * pulse, 1.42 * pulse, 0.88 * pulse);
+        ringMaterial.opacity = index === 0 ? 0.62 : 0.42;
+        domeMaterial.opacity = index === 0 ? 0.16 : 0.1;
+      });
 
       heroes.forEach((hero, index) => {
         const rhythm = (frame * 2.1 + index * 0.86) % (Math.PI * 2);
