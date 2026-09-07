@@ -1,17 +1,17 @@
 'use client';
 
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
-import { Bot, RotateCcw, Sparkles, TimerReset, Zap } from 'lucide-react';
+import { RotateCcw, Sparkles, TimerReset } from 'lucide-react';
 import { BattleScene } from '@/components/battle-scene';
 import { BOSS, PARTY, PROTOTYPE_TUNING, type PartyRole } from '@/lib/battle-config';
 import { Button } from '@/components/ui/button';
 
-type PartyBattleState = { id: PartyRole; hp: number; ultimate: number };
+type PartyBattleState = { id: PartyRole; hp: number };
 type BattleStatus = 'fighting' | 'clear' | 'timeout' | 'defeated';
 type BattleState = {
   time: number; bossHp: number; barrier: number; groggyRemaining: number;
   enemyAttackCooldown: number; skillCooldown: number; members: PartyBattleState[];
-  autoUltimate: boolean; status: BattleStatus; lastEvent: string; ultimatePulse: number;
+  status: BattleStatus; lastEvent: string;
 };
 
 const TICK_SECONDS = 0.15;
@@ -25,34 +25,15 @@ function createBattleState(): BattleState {
     groggyRemaining: 0,
     enemyAttackCooldown: PROTOTYPE_TUNING.bossAttackEvery,
     skillCooldown: PROTOTYPE_TUNING.normalSkillEvery,
-    members: PARTY.map((member, index) => ({ id: member.id, hp: MAX_PARTY_HP, ultimate: index === 1 ? 76 : 54 })),
-    autoUltimate: false,
+    members: PARTY.map((member) => ({ id: member.id, hp: MAX_PARTY_HP })),
     status: 'fighting',
     lastEvent: '자동 전투 진행 중',
-    ultimatePulse: 0,
   };
 }
 
 function formatTime(seconds: number) {
   const value = Math.max(0, Math.ceil(seconds));
   return `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
-}
-
-function applyUltimate(state: BattleState, memberId: PartyRole, source: 'manual' | 'auto') {
-  const memberIndex = state.members.findIndex((member) => member.id === memberId);
-  const memberState = state.members[memberIndex];
-  const memberConfig = PARTY.find((member) => member.id === memberId);
-  if (!memberState || !memberConfig || memberState.hp <= 0 || memberState.ultimate < 100) return state;
-  const barrier = Math.max(0, state.barrier - memberConfig.ultimateBarrierPressure);
-  const multiplier = barrier > 0 ? PROTOTYPE_TUNING.shieldedDamageMultiplier : state.groggyRemaining > 0 ? PROTOTYPE_TUNING.groggyDamageMultiplier : 1;
-  return {
-    ...state,
-    members: state.members.map((member, index) => index === memberIndex ? { ...member, ultimate: 0 } : member),
-    barrier,
-    bossHp: Math.max(0, state.bossHp - memberConfig.ultimateDamage * multiplier),
-    lastEvent: `${memberConfig.name} ${source === 'auto' ? 'AUTO ' : ''}궁극기`,
-    ultimatePulse: state.ultimatePulse + 1,
-  };
 }
 
 function applyDamage(state: BattleState, rawDamage: number, barrierPressure: number, event?: string) {
@@ -76,7 +57,6 @@ function tickBattle(current: BattleState): BattleState {
     groggyRemaining: Math.max(0, current.groggyRemaining - TICK_SECONDS),
     enemyAttackCooldown: current.enemyAttackCooldown - TICK_SECONDS,
     skillCooldown: current.skillCooldown - TICK_SECONDS,
-    members: current.members.map((member) => ({ ...member, ultimate: Math.min(100, member.ultimate + PROTOTYPE_TUNING.ultimateChargePerSecond * TICK_SECONDS) })),
   };
   const alive = next.members.filter((member) => member.hp > 0);
   const basicDamage = alive.reduce((sum, member) => sum + (PARTY.find((entry) => entry.id === member.id)?.basicAttack ?? 0), 0) * TICK_SECONDS;
@@ -94,7 +74,6 @@ function tickBattle(current: BattleState): BattleState {
   if (next.members.some((member) => member.id === 'support' && member.hp > 0)) {
     next.members = next.members.map((member) => ({ ...member, hp: Math.min(MAX_PARTY_HP, member.hp + PROTOTYPE_TUNING.supportHealingPerSecond * TICK_SECONDS) }));
   }
-  if (next.autoUltimate) next.members.forEach((member) => { if (member.ultimate >= 100) next = applyUltimate(next, member.id, 'auto'); });
   if (next.bossHp <= 0) return { ...next, status: 'clear', lastEvent: '세계수 수호 골렘 격파' };
   if (!next.members.some((member) => member.hp > 0)) return { ...next, status: 'defeated', lastEvent: '원정대 전멸' };
   if (next.time <= 0) return { ...next, time: 0, status: 'timeout', lastEvent: '제한시간 초과' };
@@ -107,11 +86,9 @@ export default function Home() {
   const totalPartyHp = useMemo(() => battle.members.reduce((sum, member) => sum + member.hp, 0) / (PARTY.length * MAX_PARTY_HP), [battle.members]);
   const bossHealthRatio = battle.bossHp / PROTOTYPE_TUNING.bossMaxHp;
   const barrierRatio = battle.barrier / PROTOTYPE_TUNING.barrierMax;
-  const useUltimate = (memberId: PartyRole) => setBattle((current) => current.status === 'fighting' ? applyUltimate(current, memberId, 'manual') : current);
-
   return (
     <main className="game-shell">
-      <BattleScene barrierRatio={barrierRatio} bossHealthRatio={bossHealthRatio} groggyRemaining={battle.groggyRemaining} ultimatePulse={battle.ultimatePulse} />
+      <BattleScene barrierRatio={barrierRatio} bossHealthRatio={bossHealthRatio} groggyRemaining={battle.groggyRemaining} />
       <header className="game-topbar">
         <div className="stage-lockup"><span className="chapter-mark">01</span><div><p>세계수 하층</p><strong>Chapter 1 Boss</strong></div></div>
         <div className="timer-lockup" aria-label={`남은 시간 ${formatTime(battle.time)}`}><TimerReset size={17} strokeWidth={2.3} /><strong>{formatTime(battle.time)}</strong></div>
@@ -129,13 +106,6 @@ export default function Home() {
           const state = battle.members.find((entry) => entry.id === member.id)!;
           return <div className="party-member" key={member.id}><span className={`party-avatar role-${member.id}`} style={{ '--member-color': member.color } as CSSProperties}><i /><b>{member.name.slice(0, 1)}</b></span><div className="party-health"><div><b>{member.name}</b><span>{member.roleLabel}</span></div><div className="member-health-track"><i style={{ width: `${state.hp}%` }} /></div></div></div>;
         })}</div>
-      </section>
-      <section className="command-hud" aria-label="궁극기 제어">
-        <div className="command-row">{PARTY.map((member) => {
-          const state = battle.members.find((entry) => entry.id === member.id)!;
-          const ready = state.ultimate >= 100;
-          return <Button key={member.id} type="button" className={`ultimate-button ${ready ? 'is-ready' : ''}`} onClick={() => useUltimate(member.id)} disabled={!ready || battle.status !== 'fighting'} aria-label={`${member.name} 궁극기 ${ready ? '사용 가능' : `${Math.floor(state.ultimate)}% 충전`}`}><span className="ultimate-ring" style={{ '--charge': `${state.ultimate}%`, '--member-color': member.color } as CSSProperties}><span className="ultimate-portrait">{member.name.slice(0, 1)}</span><Zap size={14} fill="currentColor" /></span><span className="ultimate-name">{member.name}</span></Button>;
-        })}<Button type="button" className={`auto-button ${battle.autoUltimate ? 'is-enabled' : ''}`} onClick={() => setBattle((current) => ({ ...current, autoUltimate: !current.autoUltimate }))} aria-pressed={battle.autoUltimate}><Bot size={19} /><span>AUTO</span></Button></div>
       </section>
       {battle.status !== 'fighting' && <section className="result-overlay" role="dialog" aria-modal="true" aria-label="전투 결과"><div className="result-card"><p>{battle.status === 'clear' ? 'CHAPTER 1 BOSS' : 'BATTLE RESULT'}</p><h2>{battle.status === 'clear' ? 'CLEAR' : battle.status === 'timeout' ? 'TIME OUT' : 'DEFEATED'}</h2><Button type="button" onClick={() => setBattle(createBattleState)}><RotateCcw size={17} />다시 전투</Button></div></section>}
     </main>

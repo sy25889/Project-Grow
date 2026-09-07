@@ -7,14 +7,13 @@ type Props = {
   barrierRatio: number;
   bossHealthRatio: number;
   groggyRemaining: number;
-  ultimatePulse: number;
 };
 
 type Effect = {
   mesh: THREE.Object3D;
   life: number;
   maxLife: number;
-  kind: 'bolt' | 'slash' | 'heal' | 'burst' | 'debris';
+  kind: 'bolt' | 'slash' | 'heal' | 'debris';
   speed?: number;
   velocity?: THREE.Vector3;
 };
@@ -127,10 +126,10 @@ function createHero(index: number): HeroRig {
   return { root, weapon, orb: root.userData.orb as THREE.Mesh | undefined, shield: root.userData.shield as THREE.Group | undefined, base: HERO_POSITIONS[index].clone() };
 }
 
-export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, ultimatePulse }: Props) {
+export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
-  const stateRef = useRef({ barrierRatio, bossHealthRatio, groggyRemaining, ultimatePulse });
-  stateRef.current = { barrierRatio, bossHealthRatio, groggyRemaining, ultimatePulse };
+  const stateRef = useRef({ barrierRatio, bossHealthRatio, groggyRemaining });
+  stateRef.current = { barrierRatio, bossHealthRatio, groggyRemaining };
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -282,10 +281,10 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, ul
 
     const effects: Effect[] = [];
     const addEffect = (effect: Effect) => { scene.add(effect.mesh); effects.push(effect); };
-    const spawnBolt = (heroIndex: number, ultimate = false) => {
+    const spawnBolt = (heroIndex: number) => {
       const start = heroes[heroIndex].root.position.clone().add(new THREE.Vector3(0.5, 1.25, 0.3));
-      const bolt = new THREE.Mesh(new THREE.SphereGeometry(ultimate ? 0.16 : 0.075, 12, 8), transparentMaterial(HERO_COLORS[heroIndex], ultimate ? 1 : 0.85));
-      bolt.position.copy(start); bolt.scale.set(1.8, 1.2, 1); addEffect({ mesh: bolt, life: ultimate ? 0.8 : 0.65, maxLife: ultimate ? 0.8 : 0.65, kind: 'bolt', speed: ultimate ? 14 : 10 });
+      const bolt = new THREE.Mesh(new THREE.SphereGeometry(0.075, 12, 8), transparentMaterial(HERO_COLORS[heroIndex], 0.85));
+      bolt.position.copy(start); bolt.scale.set(1.8, 1.2, 1); addEffect({ mesh: bolt, life: 0.65, maxLife: 0.65, kind: 'bolt', speed: 10 });
     };
     const spawnSlash = () => {
       const slash = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.065, 6, 22, Math.PI * 0.75), transparentMaterial(0xffcf72, 0.92));
@@ -302,18 +301,11 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, ul
         addEffect({ mesh: shard, life: 1.25, maxLife: 1.25, kind: 'debris', velocity: new THREE.Vector3((Math.random() - 0.5) * 3, 1 + Math.random() * 2, (Math.random() - 0.5) * 1.4) });
       }
     };
-    const spawnUltimate = () => {
-      for (let index = 0; index < 4; index += 1) spawnBolt(index, true);
-      const impact = new THREE.Mesh(new THREE.SphereGeometry(0.8, 20, 14), transparentMaterial(0xffe6a0, 0.68));
-      impact.position.set(4.7, 1.1, 1.1); addEffect({ mesh: impact, life: 0.7, maxLife: 0.7, kind: 'burst' });
-    };
-
     let frame = 0;
     let previousTime = 0;
     let attackClock = 0;
     let attackIndex = 0;
     let previousBarrier = stateRef.current.barrierRatio;
-    let previousPulse = stateRef.current.ultimatePulse;
     let shake = 0;
     let hitFlash = 0;
     const cameraBase = camera.position.clone();
@@ -327,7 +319,6 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, ul
         else if (attackIndex === 3) spawnHeal();
         else spawnBolt(attackIndex);
       }
-      if (previousPulse !== live.ultimatePulse) { previousPulse = live.ultimatePulse; spawnUltimate(); shake = 0.38; }
       if (previousBarrier > 0.02 && live.barrierRatio <= 0.02) { spawnDebris(); shake = 0.7; }
       previousBarrier = live.barrierRatio;
 
@@ -366,7 +357,6 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, ul
         if (effect.kind === 'bolt') { effect.mesh.position.x += (effect.speed ?? 10) * delta; effect.mesh.position.y += Math.sin(progress * Math.PI) * delta * 1.2; }
         if (effect.kind === 'slash') { effect.mesh.rotation.z += delta * 5; effect.mesh.scale.setScalar(1 + progress * 0.7); }
         if (effect.kind === 'heal') { effect.mesh.position.y += delta * 1.2; effect.mesh.scale.setScalar(1 + progress * 0.45); }
-        if (effect.kind === 'burst') effect.mesh.scale.setScalar(1 + progress * 4.5);
         if (effect.kind === 'debris' && effect.velocity) { effect.mesh.position.addScaledVector(effect.velocity, delta); effect.velocity.y -= delta * 6; effect.mesh.rotation.x += delta * 7; effect.mesh.rotation.z += delta * 5; }
         const effectMaterial = (effect.mesh as THREE.Mesh).material;
         if (effectMaterial instanceof THREE.MeshBasicMaterial) effectMaterial.opacity = Math.max(0, effect.life / effect.maxLife);

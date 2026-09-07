@@ -7,15 +7,13 @@ export type PartyMemberConfig = {
   color: string;
   basicAttack: number;
   barrierPressure: number;
-  ultimateDamage: number;
-  ultimateBarrierPressure: number;
 };
 
 export const PARTY: PartyMemberConfig[] = [
-  { id: 'tank', name: '브람', roleLabel: '탱커', color: '#4aa6dc', basicAttack: 15, barrierPressure: 5, ultimateDamage: 180, ultimateBarrierPressure: 18 },
-  { id: 'melee', name: '리오', roleLabel: '근거리', color: '#f4a54a', basicAttack: 26, barrierPressure: 31, ultimateDamage: 220, ultimateBarrierPressure: 96 },
-  { id: 'ranged', name: '세나', roleLabel: '원거리', color: '#bc71e6', basicAttack: 22, barrierPressure: 6, ultimateDamage: 205, ultimateBarrierPressure: 16 },
-  { id: 'support', name: '미아', roleLabel: '서포터', color: '#58c79d', basicAttack: 12, barrierPressure: 4, ultimateDamage: 155, ultimateBarrierPressure: 12 },
+  { id: 'tank', name: '브람', roleLabel: '탱커', color: '#4aa6dc', basicAttack: 15, barrierPressure: 5 },
+  { id: 'melee', name: '리오', roleLabel: '근거리', color: '#f4a54a', basicAttack: 26, barrierPressure: 31 },
+  { id: 'ranged', name: '세나', roleLabel: '원거리', color: '#bc71e6', basicAttack: 22, barrierPressure: 6 },
+  { id: 'support', name: '미아', roleLabel: '서포터', color: '#58c79d', basicAttack: 12, barrierPressure: 4 },
 ];
 
 // TODO Prototype tuning: detailed values remain temporary until Balance defines them.
@@ -27,7 +25,6 @@ export const PROTOTYPE_TUNING = {
   bossDamageTank: 13,
   bossDamageOther: 7,
   supportHealingPerSecond: 3.4,
-  ultimateChargePerSecond: 12,
   normalSkillEvery: 5.5,
   normalSkillDamage: 155,
   groggyDuration: 8,
