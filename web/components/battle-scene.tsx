@@ -8,13 +8,15 @@ type Props = {
   bossHealthRatio: number;
   groggyRemaining: number;
   lightBarrierRemaining: number;
+  lightBarrierCastPulse: number;
+  partyShields: number[];
 };
 
 type Effect = {
   mesh: THREE.Object3D;
   life: number;
   maxLife: number;
-  kind: 'bolt' | 'slash' | 'heal' | 'debris';
+  kind: 'bolt' | 'slash' | 'heal' | 'debris' | 'barrierWave' | 'shieldImpact';
   speed?: number;
   velocity?: THREE.Vector3;
 };
@@ -131,10 +133,10 @@ function createHero(index: number): HeroRig {
   return { root, weapon, orb: root.userData.orb as THREE.Mesh | undefined, shield: root.userData.shield as THREE.Group | undefined, base: HERO_POSITIONS[index].clone() };
 }
 
-export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, lightBarrierRemaining }: Props) {
+export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, lightBarrierRemaining, lightBarrierCastPulse, partyShields }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
-  const stateRef = useRef({ barrierRatio, bossHealthRatio, groggyRemaining, lightBarrierRemaining });
-  stateRef.current = { barrierRatio, bossHealthRatio, groggyRemaining, lightBarrierRemaining };
+  const stateRef = useRef({ barrierRatio, bossHealthRatio, groggyRemaining, lightBarrierRemaining, lightBarrierCastPulse, partyShields });
+  stateRef.current = { barrierRatio, bossHealthRatio, groggyRemaining, lightBarrierRemaining, lightBarrierCastPulse, partyShields };
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -243,14 +245,21 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, li
       const ring = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.035, 8, 28), ringMaterial);
       ring.rotation.x = Math.PI / 2;
       ring.position.y = 0.28;
+      const glyphMaterial = transparentMaterial(color, 0.28);
+      const glyph = new THREE.Mesh(new THREE.TorusGeometry(0.46, 0.018, 6, 20), glyphMaterial);
+      glyph.rotation.x = Math.PI / 2;
+      glyph.position.y = 0.34;
       const dome = new THREE.Mesh(new THREE.SphereGeometry(0.78, 18, 12), domeMaterial);
       dome.position.y = 1.08;
       dome.scale.set(0.88, 1.42, 0.88);
-      aura.add(ring, dome);
+      aura.add(ring, glyph, dome);
       aura.visible = false;
       hero.root.add(aura);
-      return { aura, ring, dome, ringMaterial, domeMaterial };
+      return { aura, ring, glyph, dome, ringMaterial, glyphMaterial, domeMaterial };
     });
+    const celionCastLight = new THREE.PointLight(0xffdf91, 0, 5, 2);
+    celionCastLight.position.set(0, 1.2, 1.5);
+    heroes[0].root.add(celionCastLight);
 
     const golem = new THREE.Group();
     const golemModel = new THREE.Group();
@@ -322,11 +331,29 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, li
         addEffect({ mesh: shard, life: 1.25, maxLife: 1.25, kind: 'debris', velocity: new THREE.Vector3((Math.random() - 0.5) * 3, 1 + Math.random() * 2, (Math.random() - 0.5) * 1.4) });
       }
     };
+    const spawnLightBarrierCast = () => {
+      heroes.forEach((hero, index) => {
+        const color = index === 0 ? 0xffdc86 : 0x9eeeff;
+        const wave = new THREE.Mesh(new THREE.TorusGeometry(index === 0 ? 0.78 : 0.46, index === 0 ? 0.07 : 0.035, 8, 32), transparentMaterial(color, index === 0 ? 0.9 : 0.58));
+        wave.position.copy(hero.root.position).add(new THREE.Vector3(0, 0.2, 0.2));
+        wave.rotation.x = Math.PI / 2;
+        addEffect({ mesh: wave, life: index === 0 ? 0.9 : 0.65, maxLife: index === 0 ? 0.9 : 0.65, kind: 'barrierWave', speed: index === 0 ? 3.8 : 2.5 });
+      });
+    };
+    const spawnShieldImpact = (heroIndex: number) => {
+      const impact = new THREE.Mesh(new THREE.SphereGeometry(heroIndex === 0 ? 0.82 : 0.58, 16, 12), transparentMaterial(heroIndex === 0 ? 0xffe3a2 : 0xa9efff, 0.52));
+      impact.position.copy(heroes[heroIndex].root.position).add(new THREE.Vector3(0, 1.05, 0.15));
+      impact.scale.set(0.88, 1.38, 0.88);
+      addEffect({ mesh: impact, life: 0.34, maxLife: 0.34, kind: 'shieldImpact' });
+    };
     let frame = 0;
     let previousTime = 0;
     let attackClock = 0;
     let attackIndex = 0;
     let previousBarrier = stateRef.current.barrierRatio;
+    let previousCastPulse = stateRef.current.lightBarrierCastPulse;
+    let previousShields = [...stateRef.current.partyShields];
+    let celionCastPulse = 0;
     let shake = 0;
     let hitFlash = 0;
     const cameraBase = camera.position.clone();
@@ -342,23 +369,38 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, li
       }
       if (previousBarrier > 0.02 && live.barrierRatio <= 0.02) { spawnDebris(); shake = 0.7; }
       previousBarrier = live.barrierRatio;
+      if (previousCastPulse !== live.lightBarrierCastPulse) {
+        previousCastPulse = live.lightBarrierCastPulse;
+        spawnLightBarrierCast();
+        celionCastPulse = 0.9;
+      }
+      live.partyShields.forEach((shield, index) => {
+        if (shield < (previousShields[index] ?? 0) - 0.05) spawnShieldImpact(index);
+      });
+      previousShields = [...live.partyShields];
       const lightBarrierActive = live.lightBarrierRemaining > 0;
-      lightBarrierAuras.forEach(({ aura, ring, dome, ringMaterial, domeMaterial }, index) => {
-        aura.visible = lightBarrierActive;
-        if (!lightBarrierActive) return;
+      lightBarrierAuras.forEach(({ aura, ring, glyph, dome, ringMaterial, glyphMaterial, domeMaterial }, index) => {
+        const hasShield = (live.partyShields[index] ?? 0) > 0.05;
+        aura.visible = lightBarrierActive || hasShield;
+        if (!aura.visible) return;
         const pulse = 1 + Math.sin(frame * 5 + index) * 0.08;
         ring.scale.setScalar(pulse);
         ring.rotation.z += delta * (1.8 + index * 0.12);
+        glyph.rotation.z -= delta * (2.5 + index * 0.18);
         dome.scale.set(0.88 * pulse, 1.42 * pulse, 0.88 * pulse);
-        ringMaterial.opacity = index === 0 ? 0.62 : 0.42;
-        domeMaterial.opacity = index === 0 ? 0.16 : 0.1;
+        ringMaterial.opacity = lightBarrierActive ? (index === 0 ? 0.62 : 0.42) : (index === 0 ? 0.5 : 0.3);
+        glyphMaterial.opacity = lightBarrierActive ? (index === 0 ? 0.46 : 0.25) : 0.18;
+        domeMaterial.opacity = lightBarrierActive ? (index === 0 ? 0.16 : 0.1) : 0.07;
       });
+      celionCastPulse = Math.max(0, celionCastPulse - delta);
+      celionCastLight.intensity = celionCastPulse * 5.2;
 
       heroes.forEach((hero, index) => {
         const rhythm = (frame * 2.1 + index * 0.86) % (Math.PI * 2);
         const action = Math.max(0, Math.sin(rhythm));
         hero.root.position.copy(hero.base);
         hero.root.position.y += Math.sin(frame * 2.6 + index) * 0.045;
+        hero.root.scale.setScalar(index === 0 ? 1.18 * (1 + Math.sin(celionCastPulse * Math.PI) * 0.12) : 1.18);
         if (index === 1) hero.root.position.x += action * 0.16;
         hero.root.rotation.z = index === 1 ? -action * 0.08 : Math.sin(frame * 2.4 + index) * 0.018;
         hero.weapon.rotation.z = index === 1 ? -action * 0.82 : index === 2 ? Math.sin(frame * 2 + index) * 0.08 : 0;
@@ -390,6 +432,8 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, li
         if (effect.kind === 'slash') { effect.mesh.rotation.z += delta * 5; effect.mesh.scale.setScalar(1 + progress * 0.7); }
         if (effect.kind === 'heal') { effect.mesh.position.y += delta * 1.2; effect.mesh.scale.setScalar(1 + progress * 0.45); }
         if (effect.kind === 'debris' && effect.velocity) { effect.mesh.position.addScaledVector(effect.velocity, delta); effect.velocity.y -= delta * 6; effect.mesh.rotation.x += delta * 7; effect.mesh.rotation.z += delta * 5; }
+        if (effect.kind === 'barrierWave') { effect.mesh.scale.setScalar(1 + progress * (effect.speed ?? 3)); effect.mesh.rotation.z += delta * 1.8; }
+        if (effect.kind === 'shieldImpact') effect.mesh.scale.setScalar(1 + progress * 0.65);
         const effectMaterial = (effect.mesh as THREE.Mesh).material;
         if (effectMaterial instanceof THREE.MeshBasicMaterial) effectMaterial.opacity = Math.max(0, effect.life / effect.maxLife);
         if (effect.kind === 'bolt' && effect.mesh.position.x > 4.2) { hitFlash = 0.18; effect.life = 0; }
