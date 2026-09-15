@@ -157,7 +157,6 @@
 
 - Notion
 - GitHub
-- Vite
 - Codex / AI-assisted prototyping
 
 ## 📚 기획 문서
