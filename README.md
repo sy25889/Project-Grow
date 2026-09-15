@@ -153,14 +153,6 @@
 - 보호막 우선 피해 처리
 - 보호막 UI 및 스킬 연출
 
-### 실행 방법
-
-```bash
-cd web
-npm install
-npm run dev
-```
-
 ## 🛠 Tools
 
 - Notion
