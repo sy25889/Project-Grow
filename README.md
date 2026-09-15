@@ -1,6 +1,10 @@
 # 🎮 Project Grow
 
+**개인 게임기획 프로젝트 · 1인 기획 · 진행 중**
+
 > 자동 전투의 편의성은 유지하면서, 직업별 대응 기믹과 파티 편성을 통해 전략성을 더한 3D 방치형 RPG
+
+**기획자: 윤성한**
 
 ![Project Grow 인게임 전투 비주얼 콘셉트](09_Character/images/tank_ingame_concept.png)
 
@@ -156,6 +160,13 @@ cd web
 npm install
 npm run dev
 ```
+
+## 🛠 Tools
+
+- Notion
+- GitHub
+- Vite
+- Codex / AI-assisted prototyping
 
 ## 📚 기획 문서
 
