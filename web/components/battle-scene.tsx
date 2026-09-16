@@ -27,6 +27,7 @@ type HeroRig = {
   orb?: THREE.Mesh;
   shield?: THREE.Group;
   base: THREE.Vector3;
+  baseScale: number;
 };
 
 const HERO_COLORS = [0x3c8fd3, 0xf09a45, 0xb875d7, 0x4dbd9a];
@@ -55,82 +56,195 @@ function transparentMaterial(color: number, opacity: number) {
   return new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending });
 }
 
+function addFace(group: THREE.Object3D, height: number, eyeColor = 0x25445c) {
+  const eye = material(eyeColor, 0.48);
+  [-0.15, 0.15].forEach((x) => addMesh(group, new THREE.SphereGeometry(0.045, 8, 6), eye, [x, height, 0.43]));
+}
+
 function createHero(index: number): HeroRig {
   const root = new THREE.Group();
   const body = new THREE.Group();
   const weapon = new THREE.Group();
-  const color = HERO_COLORS[index];
-  const cloth = material(color, 0.64);
-  const clothDark = material(new THREE.Color(color).multiplyScalar(0.56).getHex(), 0.78);
   const skin = material(0xf4c99f, 0.9);
-  const hair = material(index === 2 ? 0x54375f : index === 3 ? 0x315e5a : 0x342d2e, 0.9);
-  const metal = material(index === 0 ? 0x7996a9 : 0xe5d5bb, 0.38);
-
-  const boots = addMesh(body, new THREE.BoxGeometry(0.7, 0.2, 0.55), clothDark, [0, 0.08, 0]);
-  boots.rotation.y = 0.12;
-  addMesh(body, new THREE.CapsuleGeometry(0.17, 0.42, 4, 8), clothDark, [-0.19, 0.43, 0]);
-  addMesh(body, new THREE.CapsuleGeometry(0.17, 0.42, 4, 8), clothDark, [0.19, 0.43, 0]);
-  const torso = addMesh(body, new THREE.ConeGeometry(0.46, 0.86, 6), cloth, [0, 0.98, 0]);
-  torso.scale.z = 0.82;
-  addMesh(body, new THREE.SphereGeometry(0.52, 18, 14), skin, [0, 1.72, 0], [1, 0.96, 0.94]);
-  const fringe = addMesh(body, new THREE.SphereGeometry(0.54, 16, 10), hair, [0, 1.98, -0.02], [1.02, 0.42, 0.96]);
-  fringe.rotation.x = -0.16;
-  addMesh(body, new THREE.SphereGeometry(0.08, 10, 8), skin, [-0.5, 1.7, 0], [0.65, 1, 0.8]);
-  addMesh(body, new THREE.SphereGeometry(0.08, 10, 8), skin, [0.5, 1.7, 0], [0.65, 1, 0.8]);
-  const leftArm = addMesh(body, new THREE.CapsuleGeometry(0.13, 0.42, 4, 8), skin, [-0.48, 1.15, 0]);
-  leftArm.rotation.z = 0.32;
-  const rightArm = addMesh(body, new THREE.CapsuleGeometry(0.13, 0.42, 4, 8), skin, [0.48, 1.15, 0]);
-  rightArm.rotation.z = -0.32;
+  const gold = material(0xe1be63, 0.3);
+  const steel = material(0xd8e3e4, 0.28);
+  const leather = material(0x4b3428, 0.9);
+  let baseScale = 1.14;
 
   if (index === 0) {
-    addMesh(body, new THREE.DodecahedronGeometry(0.5, 0), metal, [0, 1.25, -0.03], [1.08, 0.45, 0.8]);
+    baseScale = 1.3;
+    const navy = material(0x244f77, 0.7);
+    const white = material(0xe7e5d8, 0.72);
+    const blonde = material(0xd8c09a, 0.88);
+    addMesh(body, new THREE.BoxGeometry(0.86, 0.2, 0.6), navy, [0, 0.1, 0]);
+    [-0.24, 0.24].forEach((x) => {
+      addMesh(body, new THREE.CapsuleGeometry(0.19, 0.46, 4, 8), steel, [x, 0.48, 0]);
+      addMesh(body, new THREE.BoxGeometry(0.28, 0.17, 0.34), gold, [x, 0.2, 0.1]);
+    });
+    addMesh(body, new THREE.ConeGeometry(0.58, 0.98, 6), white, [0, 1.08, 0], [1, 1, 0.76]);
+    addMesh(body, new THREE.BoxGeometry(0.76, 0.3, 0.52), steel, [0, 1.28, 0.13]);
+    [-0.56, 0.56].forEach((x) => addMesh(body, new THREE.DodecahedronGeometry(0.28, 0), steel, [x, 1.48, 0], [1.25, 0.7, 1]));
+    const cape = addMesh(body, new THREE.ConeGeometry(0.56, 1.34, 4), navy, [0, 0.98, -0.31], [1, 1, 0.28]);
+    cape.rotation.x = Math.PI;
+    addMesh(body, new THREE.SphereGeometry(0.5, 16, 12), skin, [0, 1.92, 0], [1, 0.95, 0.9]);
+    const hair = addMesh(body, new THREE.SphereGeometry(0.52, 14, 10), blonde, [0, 2.18, -0.03], [1.03, 0.42, 0.94]);
+    hair.rotation.x = -0.18;
+    addFace(body, 1.94, 0x2e5672);
+    [-0.38, 0.38].forEach((x) => addMesh(body, new THREE.CapsuleGeometry(0.06, 0.42, 4, 6), blonde, [x, 1.8, -0.2]));
+    [-0.55, 0.55].forEach((x) => addMesh(body, new THREE.CapsuleGeometry(0.16, 0.38, 4, 8), steel, [x, 1.14, 0]));
     const shield = new THREE.Group();
-    const face = addMesh(shield, new THREE.CylinderGeometry(0.63, 0.63, 0.16, 8), material(0x427b9b, 0.45), [0, 0, 0]);
-    face.rotation.x = Math.PI / 2;
-    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.065, 8, 20), material(0xdce2d2, 0.34));
-    rim.rotation.x = Math.PI / 2;
-    shield.add(rim);
-    addMesh(shield, new THREE.ConeGeometry(0.17, 0.16, 4), material(0xf4d172, 0.3), [0, 0, 0.14]);
-    shield.position.set(0.76, 1.06, 0.08);
-    shield.rotation.z = -0.12;
-    body.add(shield);
-    const holyGrip = addMesh(weapon, new THREE.CylinderGeometry(0.05, 0.05, 0.64, 8), material(0x6f5633, 0.34), [-0.42, 0.78, -0.08]);
-    holyGrip.rotation.z = 0.48;
-    const holyBlade = addMesh(weapon, new THREE.ConeGeometry(0.15, 1.02, 4), material(0xf6edcf, 0.2), [-0.68, 1.27, -0.08]);
-    holyBlade.rotation.z = 0.48;
-    addMesh(weapon, new THREE.BoxGeometry(0.48, 0.08, 0.1), material(0xe7c968, 0.28), [-0.5, 0.91, -0.08]);
+    addMesh(shield, new THREE.BoxGeometry(0.83, 1.05, 0.14), navy, [0, 0, 0]);
+    const shieldTip = addMesh(shield, new THREE.ConeGeometry(0.44, 0.56, 4), navy, [0, -0.78, 0]);
+    shieldTip.rotation.z = Math.PI / 4;
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.048, 6, 20), gold);
+    rim.scale.y = 1.34; rim.position.z = 0.1; shield.add(rim);
+    addMesh(shield, new THREE.OctahedronGeometry(0.15, 0), new THREE.MeshStandardMaterial({ color: 0xdaf4ff, emissive: 0x3d8fc3, emissiveIntensity: 0.8, roughness: 0.24 }), [0, 0.04, 0.12]);
+    shield.position.set(0.78, 1.18, 0.16); shield.rotation.z = -0.12; body.add(shield);
+    const grip = addMesh(weapon, new THREE.CylinderGeometry(0.055, 0.055, 0.68, 8), leather, [-0.5, 0.92, -0.08]);
+    grip.rotation.z = 0.46;
+    const blade = addMesh(weapon, new THREE.ConeGeometry(0.18, 1.12, 4), new THREE.MeshStandardMaterial({ color: 0xf4f4e8, emissive: 0x597fb0, emissiveIntensity: 0.28, roughness: 0.2, metalness: 0.35 }), [-0.79, 1.48, -0.08]);
+    blade.rotation.z = 0.46;
+    addMesh(weapon, new THREE.BoxGeometry(0.52, 0.08, 0.1), gold, [-0.59, 1.02, -0.08]);
     root.userData.shield = shield;
   } else if (index === 1) {
-    const grip = addMesh(weapon, new THREE.CylinderGeometry(0.055, 0.055, 0.72, 8), material(0x50392b), [0.24, 0.55, 0]);
-    grip.rotation.z = -0.52;
-    const blade = addMesh(weapon, new THREE.ConeGeometry(0.18, 1.28, 4), material(0xf7ecd1, 0.26), [0.52, 1.17, 0]);
-    blade.rotation.z = -0.52;
-    addMesh(weapon, new THREE.BoxGeometry(0.64, 0.09, 0.11), material(0xd89b42, 0.35), [0.31, 0.68, 0]);
+    const crimson = material(0xae4a37, 0.72);
+    const darkLeather = material(0x382b2a, 0.92);
+    const hair = material(0x8f392e, 0.88);
+    addMesh(body, new THREE.BoxGeometry(0.68, 0.18, 0.5), darkLeather, [0, 0.1, 0]);
+    [-0.2, 0.2].forEach((x) => addMesh(body, new THREE.CapsuleGeometry(0.15, 0.45, 4, 8), darkLeather, [x, 0.46, 0]));
+    addMesh(body, new THREE.ConeGeometry(0.43, 0.82, 6), crimson, [0, 1.0, 0], [1, 1, 0.78]);
+    addMesh(body, new THREE.BoxGeometry(0.66, 0.18, 0.44), steel, [0, 1.26, 0.06]);
+    [-0.48, 0.48].forEach((x) => addMesh(body, new THREE.DodecahedronGeometry(0.2, 0), steel, [x, 1.36, 0]));
+    addMesh(body, new THREE.SphereGeometry(0.46, 16, 12), skin, [0, 1.75, 0]);
+    const fringe = addMesh(body, new THREE.SphereGeometry(0.49, 14, 10), hair, [0, 2.0, -0.03], [1.02, 0.44, 0.94]);
+    fringe.rotation.x = -0.18;
+    addFace(body, 1.76, 0x4a302c);
+    const ponytail = addMesh(body, new THREE.SphereGeometry(0.18, 10, 8), hair, [-0.38, 1.95, -0.28], [0.8, 1.65, 0.7]);
+    ponytail.rotation.z = 0.35;
+    [-0.47, 0.47].forEach((x) => addMesh(body, new THREE.CapsuleGeometry(0.13, 0.4, 4, 8), skin, [x, 1.08, 0]));
+    const grip = addMesh(weapon, new THREE.CylinderGeometry(0.065, 0.065, 0.78, 8), leather, [0.32, 0.7, 0]);
+    grip.rotation.z = -0.58;
+    const blade = addMesh(weapon, new THREE.BoxGeometry(0.25, 1.18, 0.14), new THREE.MeshStandardMaterial({ color: 0xece3d4, roughness: 0.22, metalness: 0.4 }), [0.72, 1.28, 0]);
+    blade.rotation.z = -0.58;
+    const tip = addMesh(weapon, new THREE.ConeGeometry(0.18, 0.38, 4), steel, [1.05, 1.78, 0]);
+    tip.rotation.z = -0.58;
+    addMesh(weapon, new THREE.BoxGeometry(0.68, 0.1, 0.12), gold, [0.42, 0.84, 0]);
   } else if (index === 2) {
-    const bow = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.045, 8, 32, Math.PI * 1.45), material(0x82583f));
-    bow.rotation.z = Math.PI / 2;
-    bow.position.set(0.55, 1.2, 0);
-    weapon.add(bow);
-    const string = new THREE.Line(
-      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0.55, 0.58, 0.02), new THREE.Vector3(0.83, 1.2, 0.02), new THREE.Vector3(0.55, 1.82, 0.02)]),
-      new THREE.LineBasicMaterial({ color: 0xf7ecc4, transparent: true, opacity: 0.8 }),
-    );
+    const violet = material(0x6d4c88, 0.72);
+    const teal = material(0x407e7a, 0.78);
+    const hair = material(0x5b385e, 0.9);
+    [-0.17, 0.17].forEach((x) => addMesh(body, new THREE.CapsuleGeometry(0.13, 0.4, 4, 8), teal, [x, 0.4, 0]));
+    addMesh(body, new THREE.ConeGeometry(0.4, 0.76, 6), violet, [0, 0.94, 0], [1, 1, 0.74]);
+    addMesh(body, new THREE.SphereGeometry(0.43, 16, 12), skin, [0, 1.64, 0]);
+    const hood = addMesh(body, new THREE.SphereGeometry(0.49, 14, 10), hair, [0, 1.9, -0.04], [1.06, 0.48, 1]);
+    hood.rotation.x = -0.18;
+    addFace(body, 1.65, 0x453256);
+    addMesh(body, new THREE.ConeGeometry(0.22, 0.5, 5), violet, [0, 2.12, 0]);
+    const quiver = addMesh(body, new THREE.CylinderGeometry(0.12, 0.14, 0.58, 6), leather, [-0.34, 1.25, -0.2]);
+    quiver.rotation.z = 0.22;
+    [-0.44, 0.44].forEach((x) => addMesh(body, new THREE.CapsuleGeometry(0.11, 0.35, 4, 8), skin, [x, 1.0, 0]));
+    const bow = new THREE.Mesh(new THREE.TorusGeometry(0.68, 0.052, 8, 32, Math.PI * 1.5), leather);
+    bow.rotation.z = Math.PI / 2; bow.position.set(0.58, 1.2, 0); weapon.add(bow);
+    const string = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0.57, 0.53, 0.02), new THREE.Vector3(0.93, 1.2, 0.02), new THREE.Vector3(0.57, 1.87, 0.02)]), new THREE.LineBasicMaterial({ color: 0xf7ecc4, transparent: true, opacity: 0.85 }));
     weapon.add(string);
-    addMesh(weapon, new THREE.ConeGeometry(0.04, 0.6, 5), material(0xd8e0dd, 0.3), [0.32, 1.2, 0]);
-    weapon.children.at(-1)?.rotateZ(-Math.PI / 2);
+    const arrow = addMesh(weapon, new THREE.CylinderGeometry(0.018, 0.018, 0.72, 6), steel, [0.34, 1.2, 0.03]);
+    arrow.rotation.z = -Math.PI / 2;
   } else {
-    addMesh(body, new THREE.ConeGeometry(0.55, 0.9, 5), clothDark, [0, 0.72, -0.07]);
-    const staff = addMesh(weapon, new THREE.CylinderGeometry(0.045, 0.045, 1.45, 8), material(0xe6c779, 0.32), [0.54, 1.1, 0]);
-    staff.rotation.z = -0.15;
-    const crystal = addMesh(weapon, new THREE.OctahedronGeometry(0.22, 0), new THREE.MeshStandardMaterial({ color: 0x86f3c7, emissive: 0x1da77f, emissiveIntensity: 1.4, roughness: 0.25 }), [0.66, 1.8, 0]);
+    const ivory = material(0xe8e4d4, 0.76);
+    const mint = material(0x4ea78d, 0.7);
+    const blonde = material(0xd9b479, 0.88);
+    addMesh(body, new THREE.ConeGeometry(0.56, 1.2, 6), ivory, [0, 0.65, 0], [1, 1, 0.76]);
+    addMesh(body, new THREE.ConeGeometry(0.35, 0.68, 6), mint, [0, 1.28, 0], [1, 1, 0.74]);
+    addMesh(body, new THREE.SphereGeometry(0.44, 16, 12), skin, [0, 1.72, 0]);
+    const hair = addMesh(body, new THREE.SphereGeometry(0.48, 14, 10), blonde, [0, 1.98, -0.05], [1.04, 0.48, 0.98]);
+    hair.rotation.x = -0.14;
+    addFace(body, 1.73, 0x4b7867);
+    [-0.3, 0.3].forEach((x) => addMesh(body, new THREE.CapsuleGeometry(0.045, 0.36, 4, 6), blonde, [x, 1.62, -0.2]));
+    [-0.44, 0.44].forEach((x) => addMesh(body, new THREE.CapsuleGeometry(0.11, 0.38, 4, 8), skin, [x, 1.1, 0]));
+    const staff = addMesh(weapon, new THREE.CylinderGeometry(0.045, 0.045, 1.6, 8), gold, [0.55, 1.12, 0]);
+    staff.rotation.z = -0.14;
+    const crystal = addMesh(weapon, new THREE.OctahedronGeometry(0.22, 0), new THREE.MeshStandardMaterial({ color: 0xbaf8dc, emissive: 0x1aa57f, emissiveIntensity: 1.5, roughness: 0.2 }), [0.68, 1.94, 0]);
     crystal.rotation.z = 0.2;
+    const halo = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.025, 6, 18), transparentMaterial(0xe8d77d, 0.72));
+    halo.position.set(0, 2.28, 0); halo.rotation.x = Math.PI / 2; body.add(halo);
     root.userData.orb = crystal;
   }
 
   root.add(body, weapon);
-  root.scale.setScalar(1.18);
+  root.scale.setScalar(baseScale);
   root.position.copy(HERO_POSITIONS[index]);
-  return { root, weapon, orb: root.userData.orb as THREE.Mesh | undefined, shield: root.userData.shield as THREE.Group | undefined, base: HERO_POSITIONS[index].clone() };
+  return { root, weapon, orb: root.userData.orb as THREE.Mesh | undefined, shield: root.userData.shield as THREE.Group | undefined, base: HERO_POSITIONS[index].clone(), baseScale };
+}
+
+function createVineblight() {
+  const root = new THREE.Group();
+  const bark = material(0x49634a, 0.92);
+  const vine = material(0x397450, 0.86);
+  const core = new THREE.MeshStandardMaterial({ color: 0xb6ff5d, emissive: 0x4fbd4b, emissiveIntensity: 1.35, roughness: 0.3 });
+  addMesh(root, new THREE.DodecahedronGeometry(0.48, 0), bark, [0, 0.42, 0], [1.05, 0.92, 0.9]);
+  addMesh(root, new THREE.SphereGeometry(0.13, 12, 8), core, [0.1, 0.48, 0.43]);
+  [-0.32, 0.32].forEach((x) => {
+    const rootLeg = addMesh(root, new THREE.ConeGeometry(0.1, 0.72, 5), vine, [x, -0.02, 0]);
+    rootLeg.rotation.z = x < 0 ? 0.62 : -0.62;
+  });
+  [-0.42, 0.42].forEach((x) => {
+    const tendril = addMesh(root, new THREE.TorusGeometry(0.32, 0.045, 6, 14, Math.PI * 1.1), vine, [x, 0.48, -0.02]);
+    tendril.rotation.z = x < 0 ? 2.1 : -0.55;
+  });
+  return root;
+}
+
+function createBarkBeetle() {
+  const root = new THREE.Group();
+  const shell = material(0x6d7050, 0.96);
+  const plate = material(0x475646, 0.95);
+  const underbody = material(0x2e4439, 1);
+  addMesh(root, new THREE.SphereGeometry(0.58, 14, 10), shell, [0, 0.35, 0], [1.28, 0.58, 0.88]);
+  addMesh(root, new THREE.DodecahedronGeometry(0.34, 0), plate, [0.52, 0.26, 0.03], [1.05, 0.68, 0.72]);
+  [-0.26, 0, 0.26].forEach((x) => {
+    const segment = new THREE.Mesh(new THREE.TorusGeometry(0.36, 0.035, 6, 16, Math.PI), plate);
+    segment.position.set(x, 0.42, 0.12); segment.rotation.set(Math.PI / 2, 0, Math.PI / 2); root.add(segment);
+  });
+  [-0.35, 0, 0.35].forEach((x) => {
+    [-1, 1].forEach((side) => {
+      const leg = addMesh(root, new THREE.ConeGeometry(0.055, 0.55, 4), underbody, [x, 0.06, side * 0.3]);
+      leg.rotation.z = side * 1.05;
+    });
+  });
+  addMesh(root, new THREE.SphereGeometry(0.07, 10, 8), new THREE.MeshStandardMaterial({ color: 0xb4ef80, emissive: 0x3d9b57, emissiveIntensity: 1 }), [0.78, 0.32, 0.26]);
+  return root;
+}
+
+function createBlightedFairy() {
+  const root = new THREE.Group();
+  const leaf = material(0x5a8f6b, 0.7);
+  const corruption = new THREE.MeshStandardMaterial({ color: 0xa77bf0, emissive: 0x6332ba, emissiveIntensity: 1.2, roughness: 0.25 });
+  addMesh(root, new THREE.ConeGeometry(0.25, 0.62, 5), leaf, [0, 0.34, 0], [1, 1, 0.65]);
+  addMesh(root, new THREE.SphereGeometry(0.2, 12, 10), material(0xd7ac88, 0.9), [0, 0.86, 0]);
+  [-1, 1].forEach((side) => {
+    const wing = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.38), transparentMaterial(side < 0 ? 0xa8f5c6 : 0xbf8eff, 0.52));
+    wing.position.set(side * 0.34, 0.66, -0.04); wing.rotation.y = side * 0.5; wing.rotation.z = side * 0.22; root.add(wing);
+  });
+  addMesh(root, new THREE.SphereGeometry(0.08, 10, 8), corruption, [0, 0.94, 0.18]);
+  return root;
+}
+
+function createAncientGuardian() {
+  const root = new THREE.Group();
+  const bark = material(0x594b35, 0.95);
+  const darkBark = material(0x383c31, 1);
+  const moss = material(0x5f9654, 0.88);
+  addMesh(root, new THREE.CylinderGeometry(0.4, 0.56, 1.55, 6), bark, [0, 0.7, 0]);
+  addMesh(root, new THREE.DodecahedronGeometry(0.4, 0), darkBark, [0, 1.68, 0], [1.08, 0.78, 0.8]);
+  [-0.72, 0.72].forEach((x) => {
+    const arm = addMesh(root, new THREE.CapsuleGeometry(0.19, 0.72, 4, 8), bark, [x, 0.98, 0]);
+    arm.rotation.z = x < 0 ? 0.78 : -0.78;
+    addMesh(root, new THREE.DodecahedronGeometry(0.25, 0), darkBark, [x * 1.25, 0.58, 0]);
+  });
+  [-0.3, 0.3].forEach((x) => addMesh(root, new THREE.ConeGeometry(0.12, 0.7, 5), darkBark, [x, -0.12, 0]));
+  addMesh(root, new THREE.DodecahedronGeometry(0.27, 0), moss, [-0.34, 1.24, -0.2]);
+  addMesh(root, new THREE.SphereGeometry(0.07, 10, 8), new THREE.MeshStandardMaterial({ color: 0xd2c275, emissive: 0x8c8b38, emissiveIntensity: 0.8 }), [0, 1.67, 0.32]);
+  return root;
 }
 
 export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, lightBarrierRemaining, lightBarrierCastPulse, partyShields }: Props) {
@@ -150,7 +264,7 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, li
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.18;
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     mount.appendChild(renderer.domElement);
 
     const camera = new THREE.PerspectiveCamera(42, 16 / 9, 0.1, 80);
@@ -264,6 +378,8 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, li
     const golem = new THREE.Group();
     const golemModel = new THREE.Group();
     const rocks = [material(0x526a62, 0.95), material(0x6f8071, 0.92), material(0x384f4b, 1), material(0x899785, 0.88)];
+    const rootBark = material(0x4c5137, 0.95);
+    const moss = material(0x648b56, 0.9);
     const makeRock = (position: THREE.Vector3Tuple, scale: THREE.Vector3Tuple, materialIndex: number, rotation = new THREE.Euler()) => {
       const rock = addMesh(golemModel, new THREE.DodecahedronGeometry(0.72, 0), rocks[materialIndex % rocks.length], position, scale);
       rock.rotation.copy(rotation); return rock;
@@ -274,13 +390,21 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, li
     makeRock([0, 3.65, 0.03], [1.05, 0.78, 0.85], 3, new THREE.Euler(0.15, 0.1, 0));
     makeRock([-0.86, 3.75, 0.02], [0.62, 0.56, 0.68], 0, new THREE.Euler(0, 0.1, 0.2));
     makeRock([0.86, 3.75, 0.02], [0.62, 0.56, 0.68], 0, new THREE.Euler(0, -0.1, -0.2));
-    const eyeMat = new THREE.MeshStandardMaterial({ color: 0xaef8e8, emissive: 0x34bba4, emissiveIntensity: 2.4, roughness: 0.2 });
+    addMesh(golemModel, new THREE.BoxGeometry(1.6, 0.22, 0.38), rocks[2], [0, 4.03, 0.52]);
+    addMesh(golemModel, new THREE.DodecahedronGeometry(0.46, 0), rocks[1], [0, 3.2, 0.56], [1.15, 0.7, 0.58]);
+    const eyeMat = new THREE.MeshStandardMaterial({ color: 0xa9e9ff, emissive: 0x2387e8, emissiveIntensity: 2.7, roughness: 0.2 });
     addMesh(golemModel, new THREE.SphereGeometry(0.11, 12, 8), eyeMat, [-0.36, 3.64, 0.7]);
     addMesh(golemModel, new THREE.SphereGeometry(0.11, 12, 8), eyeMat, [0.36, 3.64, 0.7]);
-    const coreMat = new THREE.MeshStandardMaterial({ color: 0x7df4dd, emissive: 0x18b99f, emissiveIntensity: 2.2, roughness: 0.22 });
+    const coreMat = new THREE.MeshStandardMaterial({ color: 0x82deff, emissive: 0x1383ed, emissiveIntensity: 2.45, roughness: 0.18 });
     const core = addMesh(golemModel, new THREE.IcosahedronGeometry(0.36, 1), coreMat, [0, 2.05, 0.96]);
-    const coreRing = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.06, 8, 28), new THREE.MeshBasicMaterial({ color: 0x88ffe8, transparent: true, opacity: 0.66, blending: THREE.AdditiveBlending }));
+    const coreRing = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.06, 8, 28), new THREE.MeshBasicMaterial({ color: 0x86dcff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending }));
     coreRing.position.set(0, 2.05, 1); golemModel.add(coreRing);
+    [-0.9, -0.35, 0.35, 0.9].forEach((x, index) => {
+      const rootTendril = addMesh(golemModel, new THREE.CylinderGeometry(0.075, 0.11, 1.8, 6), rootBark, [x, 2.12 + (index % 2) * 0.22, 0.75]);
+      rootTendril.rotation.z = -0.32 + index * 0.22;
+    });
+    addMesh(golemModel, new THREE.DodecahedronGeometry(0.4, 0), moss, [-1.36, 3.03, -0.14], [1.4, 0.48, 0.78]);
+    addMesh(golemModel, new THREE.DodecahedronGeometry(0.34, 0), moss, [1.37, 3.12, -0.12], [1.48, 0.46, 0.82]);
     const leftArm = new THREE.Group(); const rightArm = new THREE.Group();
     [[-1.7, 2.5, -0.18], [-2.4, 1.55, 0], [-2.7, 0.65, 0.1], [1.7, 2.5, -0.18], [2.4, 1.55, 0], [2.7, 0.65, 0.1]].forEach(([x, y, z], index) => {
       const target = index < 3 ? leftArm : rightArm;
@@ -289,14 +413,31 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, li
       rock.position.set(x, y, z); rock.scale.set(...size); rock.rotation.set(index * 0.15, index * 0.2, index < 3 ? 0.28 : -0.28); rock.castShadow = true; target.add(rock);
     });
     golemModel.add(leftArm, rightArm);
+    [-1, 1].forEach((side) => {
+      [-0.18, 0.08, 0.34].forEach((offset) => {
+        const finger = addMesh(golemModel, new THREE.BoxGeometry(0.24, 0.5, 0.34), rocks[2], [side * 2.85, 0.75 + offset, 0.32]);
+        finger.rotation.z = side * -0.2;
+      });
+    });
     makeRock([-0.62, 0.45, 0], [0.72, 1.2, 0.78], 2, new THREE.Euler(0.1, 0, 0.08));
     makeRock([0.62, 0.45, 0], [0.72, 1.2, 0.78], 0, new THREE.Euler(-0.1, 0, -0.08));
     makeRock([-0.72, -0.45, 0.1], [0.85, 0.42, 0.9], 3);
     makeRock([0.72, -0.45, 0.1], [0.85, 0.42, 0.9], 3);
     golem.add(golemModel);
     golem.position.set(4.7, -1.55, 0.2);
-    golem.scale.setScalar(1.36);
+    golem.scale.setScalar(1.42);
     scene.add(golem);
+
+    // Passive distant silhouettes keep Chapter 1's creature language present without affecting the boss encounter.
+    const ambientCreatures = [
+      { root: createVineblight(), base: new THREE.Vector3(-6.65, -1.05, 0.62), scale: 0.84, phase: 0 },
+      { root: createBarkBeetle(), base: new THREE.Vector3(0.28, -1.38, 0.7), scale: 0.8, phase: 1.1 },
+      { root: createBlightedFairy(), base: new THREE.Vector3(-0.12, 0.82, 0.78), scale: 0.82, phase: 2.1 },
+      { root: createAncientGuardian(), base: new THREE.Vector3(7.65, -1.1, 0.72), scale: 0.74, phase: 3.2 },
+    ];
+    ambientCreatures.forEach(({ root, base, scale }) => {
+      root.position.copy(base); root.scale.setScalar(scale); scene.add(root);
+    });
 
     const armor = new THREE.Group();
     const armorRing = new THREE.Mesh(new THREE.TorusGeometry(3.15, 0.065, 8, 48), transparentMaterial(0x8edcf0, 0.56));
@@ -400,7 +541,7 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, li
         const action = Math.max(0, Math.sin(rhythm));
         hero.root.position.copy(hero.base);
         hero.root.position.y += Math.sin(frame * 2.6 + index) * 0.045;
-        hero.root.scale.setScalar(index === 0 ? 1.18 * (1 + Math.sin(celionCastPulse * Math.PI) * 0.12) : 1.18);
+        hero.root.scale.setScalar(index === 0 ? hero.baseScale * (1 + Math.sin(celionCastPulse * Math.PI) * 0.12) : hero.baseScale);
         if (index === 1) hero.root.position.x += action * 0.16;
         hero.root.rotation.z = index === 1 ? -action * 0.08 : Math.sin(frame * 2.4 + index) * 0.018;
         hero.weapon.rotation.z = index === 1 ? -action * 0.82 : index === 2 ? Math.sin(frame * 2 + index) * 0.08 : 0;
@@ -410,6 +551,11 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, li
       mist.forEach((cloud, index) => { cloud.position.x += Math.sin(frame * 0.2 + index) * 0.003; });
       lightRays.forEach((ray, index) => { ray.material.opacity = 0.045 + Math.sin(frame * 0.55 + index) * 0.018; });
       leaves.forEach((leaf, index) => { leaf.position.x += Math.sin(frame * 0.8 + index) * 0.003; leaf.position.y -= 0.002 + (index % 3) * 0.0008; leaf.rotation.z += delta * 0.75; if (leaf.position.y < -2.2) leaf.position.y = 7.5; });
+      ambientCreatures.forEach((creature, index) => {
+        creature.root.position.copy(creature.base);
+        creature.root.position.y += Math.sin(frame * (index === 2 ? 2.4 : 1.4) + creature.phase) * (index === 2 ? 0.16 : 0.035);
+        creature.root.rotation.y = Math.sin(frame * 0.55 + creature.phase) * 0.15;
+      });
 
       const groggy = live.groggyRemaining > 0;
       golemModel.rotation.z = groggy ? -0.24 + Math.sin(frame * 7) * 0.018 : Math.sin(frame * 1.3) * 0.016;
