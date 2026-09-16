@@ -23,7 +23,8 @@ type Effect = {
 
 type HeroRig = {
   root: THREE.Group;
-  weapon: THREE.Group;
+  weapon?: THREE.Group;
+  sprite?: THREE.Sprite;
   orb?: THREE.Mesh;
   shield?: THREE.Group;
   base: THREE.Vector3;
@@ -32,10 +33,10 @@ type HeroRig = {
 
 const HERO_COLORS = [0x3c8fd3, 0xf09a45, 0xb875d7, 0x4dbd9a];
 const HERO_POSITIONS = [
-  new THREE.Vector3(-5.05, -1.45, 0.2),
-  new THREE.Vector3(-1.85, -1.48, 0.05),
-  new THREE.Vector3(-4.0, -0.88, 1.1),
-  new THREE.Vector3(-2.8, -0.92, 0.92),
+  new THREE.Vector3(-5.9, -1.45, 0.25),
+  new THREE.Vector3(-1.55, -1.48, 0.05),
+  new THREE.Vector3(-7.65, -1.12, 1.15),
+  new THREE.Vector3(-3.55, -1.08, 1.05),
 ];
 
 function material(color: number, roughness = 0.7) {
@@ -56,124 +57,110 @@ function transparentMaterial(color: number, opacity: number) {
   return new THREE.MeshBasicMaterial({ color, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending });
 }
 
-function addFace(group: THREE.Object3D, height: number, eyeColor = 0x25445c) {
-  const eye = material(eyeColor, 0.48);
-  [-0.15, 0.15].forEach((x) => addMesh(group, new THREE.SphereGeometry(0.045, 8, 6), eye, [x, height, 0.43]));
-}
+type ConceptSprite = { spriteWidth: number; spriteHeight: number; scale: number };
 
-function createHero(index: number): HeroRig {
-  const root = new THREE.Group();
-  const body = new THREE.Group();
-  const weapon = new THREE.Group();
-  const skin = material(0xf4c99f, 0.9);
-  const gold = material(0xe1be63, 0.3);
-  const steel = material(0xd8e3e4, 0.28);
-  const leather = material(0x4b3428, 0.9);
-  let baseScale = 1.14;
+const CONCEPT_SPRITES: ConceptSprite[] = [
+  { spriteWidth: 3.1, spriteHeight: 3.85, scale: 1.08 },
+  { spriteWidth: 2.72, spriteHeight: 3.52, scale: 1 },
+  { spriteWidth: 2.82, spriteHeight: 3.34, scale: 0.98 },
+  { spriteWidth: 2.68, spriteHeight: 3.48, scale: 0.98 },
+];
 
-  if (index === 0) {
-    baseScale = 1.3;
-    const navy = material(0x244f77, 0.7);
-    const white = material(0xe7e5d8, 0.72);
-    const blonde = material(0xd8c09a, 0.88);
-    addMesh(body, new THREE.BoxGeometry(0.86, 0.2, 0.6), navy, [0, 0.1, 0]);
-    [-0.24, 0.24].forEach((x) => {
-      addMesh(body, new THREE.CapsuleGeometry(0.19, 0.46, 4, 8), steel, [x, 0.48, 0]);
-      addMesh(body, new THREE.BoxGeometry(0.28, 0.17, 0.34), gold, [x, 0.2, 0.1]);
-    });
-    addMesh(body, new THREE.ConeGeometry(0.58, 0.98, 6), white, [0, 1.08, 0], [1, 1, 0.76]);
-    addMesh(body, new THREE.BoxGeometry(0.76, 0.3, 0.52), steel, [0, 1.28, 0.13]);
-    [-0.56, 0.56].forEach((x) => addMesh(body, new THREE.DodecahedronGeometry(0.28, 0), steel, [x, 1.48, 0], [1.25, 0.7, 1]));
-    const cape = addMesh(body, new THREE.ConeGeometry(0.56, 1.34, 4), navy, [0, 0.98, -0.31], [1, 1, 0.28]);
-    cape.rotation.x = Math.PI;
-    addMesh(body, new THREE.SphereGeometry(0.5, 16, 12), skin, [0, 1.92, 0], [1, 0.95, 0.9]);
-    const hair = addMesh(body, new THREE.SphereGeometry(0.52, 14, 10), blonde, [0, 2.18, -0.03], [1.03, 0.42, 0.94]);
-    hair.rotation.x = -0.18;
-    addFace(body, 1.94, 0x2e5672);
-    [-0.38, 0.38].forEach((x) => addMesh(body, new THREE.CapsuleGeometry(0.06, 0.42, 4, 6), blonde, [x, 1.8, -0.2]));
-    [-0.55, 0.55].forEach((x) => addMesh(body, new THREE.CapsuleGeometry(0.16, 0.38, 4, 8), steel, [x, 1.14, 0]));
-    const shield = new THREE.Group();
-    addMesh(shield, new THREE.BoxGeometry(0.83, 1.05, 0.14), navy, [0, 0, 0]);
-    const shieldTip = addMesh(shield, new THREE.ConeGeometry(0.44, 0.56, 4), navy, [0, -0.78, 0]);
-    shieldTip.rotation.z = Math.PI / 4;
-    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.048, 6, 20), gold);
-    rim.scale.y = 1.34; rim.position.z = 0.1; shield.add(rim);
-    addMesh(shield, new THREE.OctahedronGeometry(0.15, 0), new THREE.MeshStandardMaterial({ color: 0xdaf4ff, emissive: 0x3d8fc3, emissiveIntensity: 0.8, roughness: 0.24 }), [0, 0.04, 0.12]);
-    shield.position.set(0.78, 1.18, 0.16); shield.rotation.z = -0.12; body.add(shield);
-    const grip = addMesh(weapon, new THREE.CylinderGeometry(0.055, 0.055, 0.68, 8), leather, [-0.5, 0.92, -0.08]);
-    grip.rotation.z = 0.46;
-    const blade = addMesh(weapon, new THREE.ConeGeometry(0.18, 1.12, 4), new THREE.MeshStandardMaterial({ color: 0xf4f4e8, emissive: 0x597fb0, emissiveIntensity: 0.28, roughness: 0.2, metalness: 0.35 }), [-0.79, 1.48, -0.08]);
-    blade.rotation.z = 0.46;
-    addMesh(weapon, new THREE.BoxGeometry(0.52, 0.08, 0.1), gold, [-0.59, 1.02, -0.08]);
-    root.userData.shield = shield;
-  } else if (index === 1) {
-    const crimson = material(0xae4a37, 0.72);
-    const darkLeather = material(0x382b2a, 0.92);
-    const hair = material(0x8f392e, 0.88);
-    addMesh(body, new THREE.BoxGeometry(0.68, 0.18, 0.5), darkLeather, [0, 0.1, 0]);
-    [-0.2, 0.2].forEach((x) => addMesh(body, new THREE.CapsuleGeometry(0.15, 0.45, 4, 8), darkLeather, [x, 0.46, 0]));
-    addMesh(body, new THREE.ConeGeometry(0.43, 0.82, 6), crimson, [0, 1.0, 0], [1, 1, 0.78]);
-    addMesh(body, new THREE.BoxGeometry(0.66, 0.18, 0.44), steel, [0, 1.26, 0.06]);
-    [-0.48, 0.48].forEach((x) => addMesh(body, new THREE.DodecahedronGeometry(0.2, 0), steel, [x, 1.36, 0]));
-    addMesh(body, new THREE.SphereGeometry(0.46, 16, 12), skin, [0, 1.75, 0]);
-    const fringe = addMesh(body, new THREE.SphereGeometry(0.49, 14, 10), hair, [0, 2.0, -0.03], [1.02, 0.44, 0.94]);
-    fringe.rotation.x = -0.18;
-    addFace(body, 1.76, 0x4a302c);
-    const ponytail = addMesh(body, new THREE.SphereGeometry(0.18, 10, 8), hair, [-0.38, 1.95, -0.28], [0.8, 1.65, 0.7]);
-    ponytail.rotation.z = 0.35;
-    [-0.47, 0.47].forEach((x) => addMesh(body, new THREE.CapsuleGeometry(0.13, 0.4, 4, 8), skin, [x, 1.08, 0]));
-    const grip = addMesh(weapon, new THREE.CylinderGeometry(0.065, 0.065, 0.78, 8), leather, [0.32, 0.7, 0]);
-    grip.rotation.z = -0.58;
-    const blade = addMesh(weapon, new THREE.BoxGeometry(0.25, 1.18, 0.14), new THREE.MeshStandardMaterial({ color: 0xece3d4, roughness: 0.22, metalness: 0.4 }), [0.72, 1.28, 0]);
-    blade.rotation.z = -0.58;
-    const tip = addMesh(weapon, new THREE.ConeGeometry(0.18, 0.38, 4), steel, [1.05, 1.78, 0]);
-    tip.rotation.z = -0.58;
-    addMesh(weapon, new THREE.BoxGeometry(0.68, 0.1, 0.12), gold, [0.42, 0.84, 0]);
-  } else if (index === 2) {
-    const violet = material(0x6d4c88, 0.72);
-    const teal = material(0x407e7a, 0.78);
-    const hair = material(0x5b385e, 0.9);
-    [-0.17, 0.17].forEach((x) => addMesh(body, new THREE.CapsuleGeometry(0.13, 0.4, 4, 8), teal, [x, 0.4, 0]));
-    addMesh(body, new THREE.ConeGeometry(0.4, 0.76, 6), violet, [0, 0.94, 0], [1, 1, 0.74]);
-    addMesh(body, new THREE.SphereGeometry(0.43, 16, 12), skin, [0, 1.64, 0]);
-    const hood = addMesh(body, new THREE.SphereGeometry(0.49, 14, 10), hair, [0, 1.9, -0.04], [1.06, 0.48, 1]);
-    hood.rotation.x = -0.18;
-    addFace(body, 1.65, 0x453256);
-    addMesh(body, new THREE.ConeGeometry(0.22, 0.5, 5), violet, [0, 2.12, 0]);
-    const quiver = addMesh(body, new THREE.CylinderGeometry(0.12, 0.14, 0.58, 6), leather, [-0.34, 1.25, -0.2]);
-    quiver.rotation.z = 0.22;
-    [-0.44, 0.44].forEach((x) => addMesh(body, new THREE.CapsuleGeometry(0.11, 0.35, 4, 8), skin, [x, 1.0, 0]));
-    const bow = new THREE.Mesh(new THREE.TorusGeometry(0.68, 0.052, 8, 32, Math.PI * 1.5), leather);
-    bow.rotation.z = Math.PI / 2; bow.position.set(0.58, 1.2, 0); weapon.add(bow);
-    const string = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0.57, 0.53, 0.02), new THREE.Vector3(0.93, 1.2, 0.02), new THREE.Vector3(0.57, 1.87, 0.02)]), new THREE.LineBasicMaterial({ color: 0xf7ecc4, transparent: true, opacity: 0.85 }));
-    weapon.add(string);
-    const arrow = addMesh(weapon, new THREE.CylinderGeometry(0.018, 0.018, 0.72, 6), steel, [0.34, 1.2, 0.03]);
-    arrow.rotation.z = -Math.PI / 2;
-  } else {
-    const ivory = material(0xe8e4d4, 0.76);
-    const mint = material(0x4ea78d, 0.7);
-    const blonde = material(0xd9b479, 0.88);
-    addMesh(body, new THREE.ConeGeometry(0.56, 1.2, 6), ivory, [0, 0.65, 0], [1, 1, 0.76]);
-    addMesh(body, new THREE.ConeGeometry(0.35, 0.68, 6), mint, [0, 1.28, 0], [1, 1, 0.74]);
-    addMesh(body, new THREE.SphereGeometry(0.44, 16, 12), skin, [0, 1.72, 0]);
-    const hair = addMesh(body, new THREE.SphereGeometry(0.48, 14, 10), blonde, [0, 1.98, -0.05], [1.04, 0.48, 0.98]);
-    hair.rotation.x = -0.14;
-    addFace(body, 1.73, 0x4b7867);
-    [-0.3, 0.3].forEach((x) => addMesh(body, new THREE.CapsuleGeometry(0.045, 0.36, 4, 6), blonde, [x, 1.62, -0.2]));
-    [-0.44, 0.44].forEach((x) => addMesh(body, new THREE.CapsuleGeometry(0.11, 0.38, 4, 8), skin, [x, 1.1, 0]));
-    const staff = addMesh(weapon, new THREE.CylinderGeometry(0.045, 0.045, 1.6, 8), gold, [0.55, 1.12, 0]);
-    staff.rotation.z = -0.14;
-    const crystal = addMesh(weapon, new THREE.OctahedronGeometry(0.22, 0), new THREE.MeshStandardMaterial({ color: 0xbaf8dc, emissive: 0x1aa57f, emissiveIntensity: 1.5, roughness: 0.2 }), [0.68, 1.94, 0]);
-    crystal.rotation.z = 0.2;
-    const halo = new THREE.Mesh(new THREE.TorusGeometry(0.23, 0.025, 6, 18), transparentMaterial(0xe8d77d, 0.72));
-    halo.position.set(0, 2.28, 0); halo.rotation.x = Math.PI / 2; body.add(halo);
-    root.userData.orb = crystal;
+const SPRITE_ATLAS_WIDTH = 2172;
+const SPRITE_ATLAS_HEIGHT = 724;
+const SPRITE_COLUMN_WIDTH = SPRITE_ATLAS_WIDTH / 4;
+
+function removeCheckerboardBackground(imageData: ImageData) {
+  const { data, width, height } = imageData;
+  const visited = new Uint8Array(width * height);
+  const queue = new Int32Array(width * height);
+  let head = 0;
+  let tail = 0;
+  const isBackground = (pixel: number) => {
+    const offset = pixel * 4;
+    const red = data[offset];
+    const green = data[offset + 1];
+    const blue = data[offset + 2];
+    return Math.max(red, green, blue) - Math.min(red, green, blue) < 16 && Math.min(red, green, blue) > 175;
+  };
+  const enqueue = (pixel: number) => {
+    if (!visited[pixel] && isBackground(pixel)) {
+      visited[pixel] = 1;
+      queue[tail] = pixel;
+      tail += 1;
+    }
+  };
+
+  for (let x = 0; x < width; x += 1) {
+    enqueue(x);
+    enqueue((height - 1) * width + x);
+  }
+  for (let y = 1; y < height - 1; y += 1) {
+    enqueue(y * width);
+    enqueue(y * width + width - 1);
   }
 
-  root.add(body, weapon);
-  root.scale.setScalar(baseScale);
+  while (head < tail) {
+    const pixel = queue[head];
+    head += 1;
+    const x = pixel % width;
+    const y = Math.floor(pixel / width);
+    if (x > 0) enqueue(pixel - 1);
+    if (x < width - 1) enqueue(pixel + 1);
+    if (y > 0) enqueue(pixel - width);
+    if (y < height - 1) enqueue(pixel + width);
+  }
+
+  visited.forEach((isTransparent, pixel) => {
+    if (isTransparent) data[pixel * 4 + 3] = 0;
+  });
+}
+
+function createConceptSpriteTexture(index: number) {
+  const canvas = document.createElement('canvas');
+  canvas.width = SPRITE_COLUMN_WIDTH;
+  canvas.height = SPRITE_ATLAS_HEIGHT;
+  const context = canvas.getContext('2d');
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  if (!context) return texture;
+  const image = new Image();
+  image.onload = () => {
+    context.drawImage(
+      image,
+      index * SPRITE_COLUMN_WIDTH,
+      0,
+      SPRITE_COLUMN_WIDTH,
+      SPRITE_ATLAS_HEIGHT,
+      0,
+      0,
+      SPRITE_COLUMN_WIDTH,
+      SPRITE_ATLAS_HEIGHT,
+    );
+    const imageData = context.getImageData(0, 0, SPRITE_COLUMN_WIDTH, SPRITE_ATLAS_HEIGHT);
+    removeCheckerboardBackground(imageData);
+    context.putImageData(imageData, 0, 0);
+    texture.needsUpdate = true;
+  };
+  image.src = '/concepts/project-grow-party-sprites.png';
+  return texture;
+}
+
+function createConceptHero(index: number): HeroRig {
+  const conceptSprite = CONCEPT_SPRITES[index];
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: createConceptSpriteTexture(index),
+    transparent: true,
+    depthWrite: false,
+    alphaTest: 0.03,
+  }));
+  sprite.center.set(0.5, 0);
+  sprite.scale.set(conceptSprite.spriteWidth, conceptSprite.spriteHeight, 1);
+  const root = new THREE.Group();
+  root.add(sprite);
+  root.scale.setScalar(conceptSprite.scale);
   root.position.copy(HERO_POSITIONS[index]);
-  return { root, weapon, orb: root.userData.orb as THREE.Mesh | undefined, shield: root.userData.shield as THREE.Group | undefined, base: HERO_POSITIONS[index].clone(), baseScale };
+  return { root, sprite, base: HERO_POSITIONS[index].clone(), baseScale: conceptSprite.scale };
 }
 
 function createVineblight() {
@@ -349,7 +336,7 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, li
       leaf.rotation.set(Math.random(), Math.random(), Math.random()); scene.add(leaf); leaves.push(leaf);
     }
 
-    const heroes = HERO_COLORS.map((_, index) => createHero(index));
+    const heroes = HERO_COLORS.map((_, index) => createConceptHero(index));
     heroes.forEach((hero) => scene.add(hero.root));
     const lightBarrierAuras = heroes.map((hero, index) => {
       const aura = new THREE.Group();
@@ -541,10 +528,12 @@ export function BattleScene({ barrierRatio, bossHealthRatio, groggyRemaining, li
         const action = Math.max(0, Math.sin(rhythm));
         hero.root.position.copy(hero.base);
         hero.root.position.y += Math.sin(frame * 2.6 + index) * 0.045;
-        hero.root.scale.setScalar(index === 0 ? hero.baseScale * (1 + Math.sin(celionCastPulse * Math.PI) * 0.12) : hero.baseScale);
-        if (index === 1) hero.root.position.x += action * 0.16;
+        const castScale = index === 0 ? 1 + Math.sin(celionCastPulse * Math.PI) * 0.12 : 1;
+        const attackScale = 1 + action * (index === 1 ? 0.055 : 0.022);
+        hero.root.scale.setScalar(hero.baseScale * castScale * attackScale);
+        if (index === 1) hero.root.position.x += action * 0.18;
         hero.root.rotation.z = index === 1 ? -action * 0.08 : Math.sin(frame * 2.4 + index) * 0.018;
-        hero.weapon.rotation.z = index === 1 ? -action * 0.82 : index === 2 ? Math.sin(frame * 2 + index) * 0.08 : 0;
+        if (hero.weapon) hero.weapon.rotation.z = index === 1 ? -action * 0.82 : index === 2 ? Math.sin(frame * 2 + index) * 0.08 : 0;
         if (hero.shield) hero.shield.rotation.y = 0.05 + Math.sin(frame * 2) * 0.08;
         if (hero.orb) { hero.orb.rotation.y += delta * 2.5; hero.orb.scale.setScalar(1 + Math.sin(frame * 4) * 0.12); }
       });
