@@ -6,7 +6,7 @@
 
 **기획자: 윤성한**
 
-![Project Grow 인게임 전투 비주얼 콘셉트](09_Character/images/tank_ingame_concept.png)
+<img src="09_Character/images/tank_paladin_sheet.png" width="420" alt="Project Grow 셀리온 전투 스프라이트" />
 
 ## 📌 프로젝트 개요
 
@@ -79,7 +79,7 @@
 
 ## 🛡️ Tank Character Lineup
 
-![Project Grow 탱커 캐릭터 라인업](09_Character/images/tank_lineup.png)
+<img src="09_Character/images/tank_paladin_sheet.png" width="360" alt="셀리온 전투 스프라이트 프레임" />
 
 ### B - 카일
 
@@ -141,6 +141,7 @@
 - 4인 파티 자동 전투
 - 자동 기본 공격
 - 자동 일반 스킬
+- 4개 웨이브 전투 진행
 - 보스 HP
 - 보스 방어 게이지
 - Break / Groggy
@@ -153,11 +154,13 @@
 - 보호막
 - 보호막 우선 피해 처리
 - 보호막 UI 및 스킬 연출
+- 캐릭터 및 몬스터 스프라이트 프레임 애니메이션
 
 ## 🛠 Tools
 
 - Notion
 - GitHub
+- Vite
 - Codex / AI-assisted prototyping
 
 ## 📚 기획 문서

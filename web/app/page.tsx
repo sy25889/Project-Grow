@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { RotateCcw, Sparkles, TimerReset } from 'lucide-react';
 import { BattleScene } from '@/components/battle-scene';
 import { BOSS, CELION_PROTOTYPE_TUNING, PARTY, PROTOTYPE_TUNING, type PartyRole } from '@/lib/battle-config';
+import { createSpriteBattleState, getCurrentWave, tickSpriteBattle, type SpriteBattleState } from '@/lib/sprite-battle';
 import { Button } from '@/components/ui/button';
 
 type PartyBattleState = { id: PartyRole; hp: number; shield: number };
@@ -123,9 +124,9 @@ function tickBattle(current: BattleState): BattleState {
 }
 
 export default function Home() {
-  const [battle, setBattle] = useState<BattleState>(createBattleState);
+  const [battle, setBattle] = useState<SpriteBattleState>(createSpriteBattleState);
   const [showLightBarrierAnnouncement, setShowLightBarrierAnnouncement] = useState(false);
-  useEffect(() => { const timer = window.setInterval(() => setBattle(tickBattle), TICK_SECONDS * 1000); return () => window.clearInterval(timer); }, []);
+  useEffect(() => { const timer = window.setInterval(() => setBattle(tickSpriteBattle), TICK_SECONDS * 1000); return () => window.clearInterval(timer); }, []);
   useEffect(() => {
     if (battle.lightBarrierCastPulse === 0) return;
     setShowLightBarrierAnnouncement(true);
@@ -133,22 +134,23 @@ export default function Home() {
     return () => window.clearTimeout(timer);
   }, [battle.lightBarrierCastPulse]);
   const totalPartyHp = useMemo(() => battle.members.reduce((sum, member) => sum + member.hp, 0) / (PARTY.length * MAX_PARTY_HP), [battle.members]);
-  const bossHealthRatio = battle.bossHp / PROTOTYPE_TUNING.bossMaxHp;
-  const barrierRatio = battle.barrier / PROTOTYPE_TUNING.barrierMax;
+  const currentWave = getCurrentWave(battle);
+  const enemyHealthRatio = battle.enemyHp / currentWave.maxHp;
+  const barrierRatio = currentWave.barrierMax ? battle.barrier / currentWave.barrierMax : 0;
   const partyShields = useMemo(() => battle.members.map((member) => member.shield), [battle.members]);
   const partyHealth = useMemo(() => battle.members.map((member) => member.hp), [battle.members]);
   return (
     <main className="game-shell">
-      <BattleScene barrierRatio={barrierRatio} bossHealthRatio={bossHealthRatio} groggyRemaining={battle.groggyRemaining} lightBarrierRemaining={battle.lightBarrierRemaining} lightBarrierCastPulse={battle.lightBarrierCastPulse} partyShields={partyShields} partyHealth={partyHealth} lastEvent={battle.lastEvent} />
+      <BattleScene currentWave={currentWave} currentWaveNumber={battle.waveIndex + 1} totalWaves={4} enemyHealthRatio={enemyHealthRatio} barrierRatio={barrierRatio} groggyRemaining={battle.groggyRemaining} lightBarrierRemaining={battle.lightBarrierRemaining} lightBarrierCastPulse={battle.lightBarrierCastPulse} partyShields={partyShields} partyHealth={partyHealth} partyAnimations={battle.partyAnimations} partyActionTokens={battle.partyActionTokens} enemyAnimation={battle.enemyAnimation} enemyActionToken={battle.enemyActionToken} lastEvent={battle.lastEvent} />
       <header className="game-topbar">
-        <div className="stage-lockup"><span className="chapter-mark">01</span><div><p>세계수 하층 · WAVE 3 / 3</p><strong>Chapter 1 Boss</strong></div></div>
+        <div className="stage-lockup"><span className="chapter-mark">01</span><div><p>세계수 하층 · WAVE {battle.waveIndex + 1} / 4</p><strong>{currentWave.isBoss ? 'Chapter 1 Boss' : '자동 전투 진행'}</strong></div></div>
         <div className="timer-lockup" aria-label={`남은 시간 ${formatTime(battle.time)}`}><TimerReset size={17} strokeWidth={2.3} /><strong>{formatTime(battle.time)}</strong></div>
         <div className="prototype-mark"><Sparkles size={14} /><span>PHASE 1</span></div>
       </header>
       <section className="boss-hud" aria-label="보스 상태">
-        <div className="boss-heading"><div><p>{BOSS.subtitle}</p><h1>{BOSS.name}</h1></div>{battle.groggyRemaining > 0 && <span className="groggy-chip">GROGGY {battle.groggyRemaining.toFixed(1)}s</span>}</div>
-        <div className="meter-block boss-meter"><div className="meter-label"><span>HP</span><b>{Math.ceil(battle.bossHp).toLocaleString()} / {PROTOTYPE_TUNING.bossMaxHp.toLocaleString()}</b></div><div className="meter-track"><span className="boss-fill" style={{ width: `${bossHealthRatio * 100}%` }} /></div></div>
-        <div className="meter-block barrier-meter"><div className="meter-label"><span>방어 게이지</span><b>{Math.ceil(battle.barrier)} / {PROTOTYPE_TUNING.barrierMax}</b></div><div className="meter-track"><span className="barrier-fill" style={{ width: `${barrierRatio * 100}%` }} /></div></div>
+        <div className="boss-heading"><div><p>{currentWave.subtitle}</p><h1>{currentWave.name}</h1></div>{battle.groggyRemaining > 0 && <span className="groggy-chip">GROGGY {battle.groggyRemaining.toFixed(1)}s</span>}</div>
+        <div className="meter-block boss-meter"><div className="meter-label"><span>{currentWave.isBoss ? 'BOSS HP' : 'ENEMY HP'}</span><b>{Math.ceil(battle.enemyHp).toLocaleString()} / {currentWave.maxHp.toLocaleString()}</b></div><div className="meter-track"><span className="boss-fill" style={{ width: `${enemyHealthRatio * 100}%` }} /></div></div>
+        {currentWave.isBoss && <div className="meter-block barrier-meter"><div className="meter-label"><span>방어 게이지</span><b>{Math.ceil(battle.barrier)} / {currentWave.barrierMax}</b></div><div className="meter-track"><span className="barrier-fill" style={{ width: `${barrierRatio * 100}%` }} /></div></div>}
       </section>
       <div className="battle-callout" aria-live="polite"><span className="event-spark" />{battle.lastEvent}</div>
       {showLightBarrierAnnouncement && <div className="light-barrier-announcement" key={battle.lightBarrierCastPulse} aria-live="polite"><span>빛의 결계</span></div>}
@@ -160,7 +162,7 @@ export default function Home() {
           return <div className="party-member" key={member.id} aria-label={`${member.name} HP ${Math.ceil(state.hp)}, 보호막 ${Math.ceil(state.shield)}`}><span className={`party-avatar role-${member.id}`} style={{ '--member-color': member.color } as CSSProperties}><i /><b>{member.name.slice(0, 1)}</b></span><div className="party-health"><div><b>{member.name}</b><span>{member.roleLabel}</span></div><div className="member-bars"><div className="member-health-track"><i style={{ width: `${state.hp}%` }} /></div>{state.shield > 0 && <div className="member-shield-row" aria-label={`보호막 ${Math.ceil(state.shield)}`}><div className="member-shield-track"><i style={{ width: `${shieldRatio}%` }} /></div><span>{Math.ceil(state.shield)}</span></div>}</div></div></div>;
         })}</div>
       </section>
-      {battle.status !== 'fighting' && <section className="result-overlay" role="dialog" aria-modal="true" aria-label="전투 결과"><div className="result-card"><p>{battle.status === 'clear' ? 'CHAPTER 1 BOSS' : 'BATTLE RESULT'}</p><h2>{battle.status === 'clear' ? 'CLEAR' : battle.status === 'timeout' ? 'TIME OUT' : 'DEFEATED'}</h2><Button type="button" onClick={() => setBattle(createBattleState)}><RotateCcw size={17} />다시 전투</Button></div></section>}
+      {battle.status !== 'fighting' && <section className="result-overlay" role="dialog" aria-modal="true" aria-label="전투 결과"><div className="result-card"><p>{battle.status === 'clear' ? 'CHAPTER 1' : 'BATTLE RESULT'}</p><h2>{battle.status === 'clear' ? 'CLEAR' : battle.status === 'timeout' ? 'TIME OUT' : 'DEFEATED'}</h2><Button type="button" onClick={() => setBattle(createSpriteBattleState)}><RotateCcw size={17} />다시 전투</Button></div></section>}
     </main>
   );
 }
