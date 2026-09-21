@@ -136,11 +136,12 @@ export default function Home() {
   const bossHealthRatio = battle.bossHp / PROTOTYPE_TUNING.bossMaxHp;
   const barrierRatio = battle.barrier / PROTOTYPE_TUNING.barrierMax;
   const partyShields = useMemo(() => battle.members.map((member) => member.shield), [battle.members]);
+  const partyHealth = useMemo(() => battle.members.map((member) => member.hp), [battle.members]);
   return (
     <main className="game-shell">
-      <BattleScene barrierRatio={barrierRatio} bossHealthRatio={bossHealthRatio} groggyRemaining={battle.groggyRemaining} lightBarrierRemaining={battle.lightBarrierRemaining} lightBarrierCastPulse={battle.lightBarrierCastPulse} partyShields={partyShields} />
+      <BattleScene barrierRatio={barrierRatio} bossHealthRatio={bossHealthRatio} groggyRemaining={battle.groggyRemaining} lightBarrierRemaining={battle.lightBarrierRemaining} lightBarrierCastPulse={battle.lightBarrierCastPulse} partyShields={partyShields} partyHealth={partyHealth} lastEvent={battle.lastEvent} />
       <header className="game-topbar">
-        <div className="stage-lockup"><span className="chapter-mark">01</span><div><p>세계수 하층</p><strong>Chapter 1 Boss</strong></div></div>
+        <div className="stage-lockup"><span className="chapter-mark">01</span><div><p>세계수 하층 · WAVE 3 / 3</p><strong>Chapter 1 Boss</strong></div></div>
         <div className="timer-lockup" aria-label={`남은 시간 ${formatTime(battle.time)}`}><TimerReset size={17} strokeWidth={2.3} /><strong>{formatTime(battle.time)}</strong></div>
         <div className="prototype-mark"><Sparkles size={14} /><span>PHASE 1</span></div>
       </header>
