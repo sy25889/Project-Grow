@@ -28,6 +28,12 @@
 
 정상에 가까워질수록 세계수의 오염과 세계의 역사에 숨겨진 비밀을 발견하게 된다.
 
+## 🌳 Chapter 1 전투 배경
+
+![World Tree Lower Background](11_Stage/images/backgrounds/world_tree_lower_bg.png)
+
+Chapter 1 세계수 하층의 2D 전투 배경 콘셉트이며, 현재 웹 전투 프로토타입의 메인 배경으로 적용되어 있다.
+
 ## ✨ 핵심 기획
 
 ### 1. 실패해도 멈추지 않는 성장 루프
@@ -64,10 +70,13 @@
 **캐릭터 태생 등급:** B → A → S → SS
 
 - 최대 레벨: Lv.100
+- Lv.1~100 골드 기반 레벨업
 - 일반 레벨과 돌파 시스템 분리
 - 최대 돌파: ⭐⭐⭐⭐⭐
 - 돌파 1회 필요 조각: 20개
 - 중복 캐릭터 획득 시 해당 캐릭터 조각 획득
+- 무기 / 방어구 장착 및 골드 강화
+- 장비 소환을 통한 장비 획득
 
 **돌파 방향**
 
@@ -169,6 +178,9 @@
 - [핵심 성장 루프](02_Core_Loop/Core_Loop.md)
 - [게임플레이](03_Gameplay/Gameplay.md)
 - [전투](04_Combat/Combat.md)
+- [성장](05_Growth/Growth.md)
+- [재화](06_Economy/Economy.md)
+- [가챠](08_Gacha/Gacha.md)
 - [캐릭터](09_Character/Character.md)
 - [몬스터](10_Monster/Monster.md)
 - [스테이지](11_Stage/Stage.md)
