@@ -185,3 +185,8 @@ Chapter 1 세계수 하층의 2D 전투 배경 콘셉트이며, 현재 웹 전�
 - [몬스터](10_Monster/Monster.md)
 - [스테이지](11_Stage/Stage.md)
 - [밸런스](13_Balance/Balance.md)
+- [데모 업데이트 기획](14_Demo_Update/Demo_Update.md)
+
+## 🎮 플레이 데모
+
+설치 없이 실행되는 단일 파일 데모입니다. [`demo/index.html`](demo/index.html)을 브라우저로 열면 플레이할 수 있습니다. 자세한 설명은 [demo/README.md](demo/README.md)를 참고하세요.
