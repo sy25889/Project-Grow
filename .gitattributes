@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# 예전 프로토타입은 언어 통계에서 제외
+docs/archive/prototype-web/** linguist-vendored
