@@ -98,7 +98,7 @@ B → A → S → SS
 
 #### 셀리온 전투 스프라이트 참고
 
-![셀리온 전투 스프라이트 프레임](images/tank_paladin_sheet.png)
+![셀리온 전투 스프라이트 프레임](../../09_Character/images/tank_paladin_sheet.png)
 
 셀리온의 중갑, 성검, 대형 방패와 빛의 결계 연출 방향을 반영한 2D 전투 스프라이트 시트이다.
 전투에서는 idle, move, attack, skill, hit, death 프레임으로 분리해 사용하며, 세부 외형은 실제 제작 과정에서 조정할 수 있다.
