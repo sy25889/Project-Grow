@@ -186,6 +186,8 @@ Chapter 1 세계수 하층의 2D 전투 배경 콘셉트이며, 현재 웹 전�
 - [스테이지](11_Stage/Stage.md)
 - [밸런스](13_Balance/Balance.md)
 - [데모 업데이트 기획](14_Demo_Update/Demo_Update.md)
+- [시스템 상세 기획](15_System_Details/System_Details.md)
+- [버그 수정 기록](14_Demo_Update/Bug_Fix_Log.md)
 
 ## 🎮 플레이 데모
 
