@@ -412,7 +412,7 @@ function prep(){Object.keys(ED).forEach(k=>{const e=ED[k];if(e.tb&&!IMG[k]){IMG[
 /* ---------------- state ---------------- */
 let bulkOpen=0,bulkN={0:99,1:99,2:0,3:0,4:0},dsN=1,dsAsk=0,eqMsg='';
 let dun=null,dgTab='g',dgRole='tank',dgMsg='',mtab='q';
-let U=[],FX=[],PT=[],LT=[],wave=0,wt=0,speed=1,over=0,T=0,gap=0,stg=1,run={g:0,d:0,s:0},scr='battle',sel='leon',selE='kyle',pick=null,tab='c',dirty=0;
+const TLIM=s=>s%5==0?240:150;let U=[],FX=[],PT=[],LT=[],wave=0,wt=0,speed=1,over=0,T=0,gap=0,stg=1,run={g:0,d:0,s:0},scr='battle',sel='leon',selE='kyle',pick=null,tab='c',dirty=0;
 let taunt=null,tauntT=0,prot={o:null,tg:null,t:0},hs=0,shake=0,tNow=0;
 const alive=s=>U.filter(u=>u.side==s&&!u.dead);
 const aliveE=()=>alive('e').filter(x=>!x.spawn);
@@ -496,7 +496,7 @@ function foeAI(u){if(u.at>0)return;
  const t=pickT();if(!t)return;u.at=u.acd;
  act(u,2,u.boss?.9:.7,.5,()=>{const tt=t.dead?pickT():t;if(tt)dmg(u,tt,u.atk*(u.debuf>0?.75:1))})}
 function update(dt){
- if(over)return;T+=dt;tauntT=Math.max(0,tauntT-dt);ab.t=Math.max(0,ab.t-dt);if(!tauntT)taunt=null;prot.t=Math.max(0,prot.t-dt);
+ if(over)return;T+=dt;if(!dun&&!over&&T>=TLIM(stg)){over=1;gap=0;banner('TIME OVER',1);fin(0);return}tauntT=Math.max(0,tauntT-dt);ab.t=Math.max(0,ab.t-dt);if(!tauntT)taunt=null;prot.t=Math.max(0,prot.t-dt);
  for(let i=LT.length-1;i>=0;i--){LT[i].t-=dt;if(LT[i].t<=0){const f=LT[i].f;LT.splice(i,1);f()}}
  U.forEach(u=>{u.ph+=dt;u.hit=Math.max(0,u.hit-dt);u.flash=Math.max(0,u.flash-dt*5);u.kb*=Math.exp(-dt*11);u.drt=Math.max(0,u.drt-dt);u.debuf=Math.max(0,u.debuf-dt);u.ctrT=Math.max(0,u.ctrT-dt);
   u.dh+=((u.hp/u.mx)-u.dh)*Math.min(1,dt*10);
@@ -711,7 +711,7 @@ function buildHud(){const bl=$('bl');bl.innerHTML='';HU=U.filter(u=>u.side=='h')
 function hudUpdate(){HU.forEach(h=>{const u=h.u,p=cl(u.hp/u.mx)*100;h.fl.style.width=p+'%';h.tr.style.width=p+'%';h.sb.style.width=cl(u.sh/300)*100+'%';
   const rd=u.dead?0:1-Math.max(0,u.st)/u.sd;h.cd.style.width=cl(rd)*100+'%';h.d.classList.toggle('rdy',rd>=1&&!u.dead);h.d.classList.toggle('dead',!!u.dead)});
  $('wl').textContent=WL[wave];[...$('pips').children].forEach((p,i)=>p.classList.toggle('on',i<=wave));
- $('tm').textContent=Math.floor(T/60)+':'+String(Math.floor(T%60)).padStart(2,'0');
+ {const R=dun?T:Math.max(0,TLIM(stg)-T);$('tm').textContent=Math.floor(R/60)+':'+String(Math.floor(R%60)).padStart(2,'0');$('tm').style.color=!dun&&R<15?'#ff9b8a':''}
  const b=U.find(x=>x.boss&&!x.dead&&!x.spawn),tc=$('tc');
  if(b&&scr=='battle'){tc.style.display='block';$('bnm').textContent=b.n;const p=cl(b.hp/b.mx)*100;$('bfl').style.width=p+'%';$('btr').style.width=p+'%';$('bst').textContent=b.grog>0?'GROGGY':'방어 게이지';$('gfl').style.width=(b.grog>0?cl(b.grog/5):cl(b.gd/100))*100+'%';$('gdb').classList.toggle('gr',b.grog>0)}else tc.style.display='none'}
 let bnT=0;
