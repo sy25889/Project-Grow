@@ -6,7 +6,7 @@
 
 **기획자: 윤성한**
 
-<img src="09_Character/images/tank_paladin_sheet.png" width="420" alt="Project Grow 셀리온 전투 스프라이트" />
+<img src="docs/09_Character/images/tank_paladin_sheet.png" width="420" alt="Project Grow 셀리온 전투 스프라이트" />
 
 ## 📌 프로젝트 개요
 
@@ -30,7 +30,7 @@
 
 ## 🌳 Chapter 1 전투 배경
 
-![World Tree Lower Background](11_Stage/images/backgrounds/world_tree_lower_bg.png)
+![World Tree Lower Background](docs/11_Stage/images/backgrounds/world_tree_lower_bg.png)
 
 Chapter 1 세계수 하층의 2D 전투 배경 콘셉트이며, 현재 플레이 데모의 배경으로 사용한다.
 
@@ -63,7 +63,7 @@ Chapter 1 세계수 하층의 2D 전투 배경 콘셉트이며, 현재 플레이
 - 암살자: 후방·HP가 낮은 적을 노린 순간 피해
 - 서포터: 회복, 보호막, 공격력 버프
 
-보스는 방어 게이지가 0이 되면 5초 동안 그로기에 빠져 큰 피해를 받는다. 추천 직업별 전용 효과를 두는 "직업 대응 시스템"은 정식 버전에서 검토한다. ([Combat.md](04_Combat/Combat.md) 참고)
+보스는 방어 게이지가 0이 되면 5초 동안 그로기에 빠져 큰 피해를 받는다. 추천 직업별 전용 효과를 두는 "직업 대응 시스템"은 정식 버전에서 검토한다. ([Combat.md](docs/04_Combat/Combat.md) 참고)
 
 ### 3. 캐릭터 성장 시스템
 
@@ -88,9 +88,9 @@ Chapter 1 세계수 하층의 2D 전투 배경 콘셉트이며, 현재 플레이
 
 ## 🛡️ Character Lineup
 
-<img src="09_Character/images/tank_paladin_sheet.png" width="360" alt="셀리온 전투 스프라이트 프레임" />
+<img src="docs/09_Character/images/tank_paladin_sheet.png" width="360" alt="셀리온 전투 스프라이트 프레임" />
 
-직업 5종 × 등급 4종, 총 20명의 캐릭터가 있다. 전체 목록과 스킬은 [Character.md](09_Character/Character.md)를 참고한다.
+직업 5종 × 등급 4종, 총 20명의 캐릭터가 있다. 전체 목록과 스킬은 [Character.md](docs/09_Character/Character.md)를 참고한다.
 
 - 탱커: 카일(B) / 레이아(A) / 바르칸(S) / 셀리온(SS)
 - 근접: 레온(B) / 라이넬(A) / 그람(S) / 아르카(SS)
@@ -113,7 +113,7 @@ Chapter 1 세계수 하층의 2D 전투 배경 콘셉트이며, 현재 플레이
 3. 방어 게이지가 0이 되면 BREAK
 4. 5초 동안 그로기 상태에서 큰 피해를 받음
 
-근접 직업은 방어 게이지를 빠르게 깎는 데 유리하다. 상세는 [Combat.md](04_Combat/Combat.md)와 [Monster.md](10_Monster/Monster.md)를 참고한다.
+근접 직업은 방어 게이지를 빠르게 깎는 데 유리하다. 상세는 [Combat.md](docs/04_Combat/Combat.md)와 [Monster.md](docs/10_Monster/Monster.md)를 참고한다.
 
 ## 🧪 Play Demo
 
@@ -136,21 +136,21 @@ Chapter 1 세계수 하층의 2D 전투 배경 콘셉트이며, 현재 플레이
 
 ## 📚 기획 문서
 
-- [프로젝트 개요](01_Project_Overview/Project_Overview.md)
-- [핵심 성장 루프](02_Core_Loop/Core_Loop.md)
-- [게임플레이](03_Gameplay/Gameplay.md)
-- [전투](04_Combat/Combat.md)
-- [성장](05_Growth/Growth.md)
-- [재화](06_Economy/Economy.md)
-- [콘텐츠(던전·미션·출석)](07_Content/Content.md)
-- [가챠](08_Gacha/Gacha.md)
-- [캐릭터](09_Character/Character.md)
-- [몬스터](10_Monster/Monster.md)
-- [스테이지](11_Stage/Stage.md)
-- [밸런스](13_Balance/Balance.md)
-- [플레이 데모](14_Demo_Update/Demo_Update.md)
-- [버그 수정 기록](14_Demo_Update/Bug_Fix_Log.md)
-- [초기 기획 문서 보관](archive/initial_planning/)
+- [프로젝트 개요](docs/01_Project_Overview/Project_Overview.md)
+- [핵심 성장 루프](docs/02_Core_Loop/Core_Loop.md)
+- [게임플레이](docs/03_Gameplay/Gameplay.md)
+- [전투](docs/04_Combat/Combat.md)
+- [성장](docs/05_Growth/Growth.md)
+- [재화](docs/06_Economy/Economy.md)
+- [콘텐츠(던전·미션·출석)](docs/07_Content/Content.md)
+- [가챠](docs/08_Gacha/Gacha.md)
+- [캐릭터](docs/09_Character/Character.md)
+- [몬스터](docs/10_Monster/Monster.md)
+- [스테이지](docs/11_Stage/Stage.md)
+- [밸런스](docs/13_Balance/Balance.md)
+- [플레이 데모](docs/14_Demo_Update/Demo_Update.md)
+- [버그 수정 기록](docs/14_Demo_Update/Bug_Fix_Log.md)
+- [초기 기획 문서 보관](docs/archive/initial_planning/)
 
 ## 🎮 플레이 데모
 
