@@ -134,6 +134,14 @@ Chapter 1 세계수 하층의 2D 전투 배경 콘셉트이며, 현재 플레이
 - GitHub
 - Codex / AI-assisted prototyping
 
+## 📁 저장소 구조
+
+| 위치 | 내용 |
+|---|---|
+| `demo/` | 브라우저에서 바로 실행되는 플레이 데모 |
+| `docs/` | 기획 문서 (01 개요 ~ 14 플레이 데모·버그 수정 기록) |
+| `docs/archive/` | 초기 기획 문서와 예전 웹 프로토타입 보관 |
+
 ## 📚 기획 문서
 
 - [프로젝트 개요](docs/01_Project_Overview/Project_Overview.md)
