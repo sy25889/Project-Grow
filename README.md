@@ -6,6 +6,10 @@
 
 **기획자: 윤성한**
 
+### ▶ [바로 플레이하기](https://sy25889.github.io/Project-Grow/demo/)
+
+설치 없이 브라우저에서 바로 실행됩니다. (PC·모바일 가로 화면 권장)
+
 <img src="docs/09_Character/images/tank_paladin_sheet.png" width="420" alt="Project Grow 셀리온 전투 스프라이트" />
 
 ## 📌 프로젝트 개요
@@ -161,5 +165,7 @@ Chapter 1 세계수 하층의 2D 전투 배경 콘셉트이며, 현재 플레이
 - [초기 기획 문서 보관](docs/archive/initial_planning/)
 
 ## 🎮 플레이 데모
+
+**플레이 주소: https://sy25889.github.io/Project-Grow/demo/**
 
 설치 없이 실행되는 단일 파일 데모입니다. [`demo/index.html`](demo/index.html)을 브라우저로 열면 플레이할 수 있습니다. 자세한 설명은 [demo/README.md](demo/README.md)를 참고하세요.
